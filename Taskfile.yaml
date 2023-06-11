@@ -1,0 +1,16 @@
+# https://taskfile.dev
+version: "3"
+
+tasks:
+  build:
+    env:
+      MIX_ENV: dev
+    cmds:
+      - mix deps.update --all
+      - mix clean;mix compile
+  test:
+    env:
+      MIX_ENV: dev
+    cmds:
+      - mix compile
+      - mix test
