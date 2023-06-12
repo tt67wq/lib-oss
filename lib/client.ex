@@ -33,7 +33,7 @@ defmodule LibOss.Client do
   end
 end
 
-defmodule LibOss.Client.Finch do
+defmodule LibOss.Client.Default do
   @moduledoc """
   Implement LibOss.Client behavior with Finch
   """
