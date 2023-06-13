@@ -1,6 +1,6 @@
-defmodule LibOss.Client do
+defmodule LibOss.Http do
   @moduledoc """
-  behavior: LibOss.Client
+  behavior os http transport
   """
   alias LibOss.{Error}
 
@@ -9,13 +9,13 @@ defmodule LibOss.Client do
   @type method :: Finch.Request.method()
   @type path :: bitstring()
   @type headers :: [%{String.t() => String.t()}]
-  @type body :: %{String.t() => any()} | nil
+  @type body :: iodata() | nil
   @type params :: %{String.t() => any()} | nil
 
   @callback new(opts()) :: t()
-  @callback start_link(client: t()) :: GenServer.on_start()
+  @callback start_link(http: t()) :: GenServer.on_start()
   @callback do_request(
-              client :: t(),
+              http :: t(),
               method :: method(),
               path :: bitstring(),
               headers :: headers(),
@@ -25,56 +25,48 @@ defmodule LibOss.Client do
             ) ::
               {:ok, iodata()} | {:error, Error.t()}
 
-  defp delegate(%module{} = client, func, args),
-    do: apply(module, func, [client | args])
+  defp delegate(%module{} = http, func, args),
+    do: apply(module, func, [http | args])
 
-  def do_request(client, method, path, headers, body, params, opts \\ []) do
-    delegate(client, :do_request, [method, path, headers, body, params, opts])
+  def do_request(http, method, path, headers, body, params, opts \\ []) do
+    delegate(http, :do_request, [method, path, headers, body, params, opts])
   end
 end
 
-defmodule LibOss.Client.Default do
+defmodule LibOss.Http.Default do
   @moduledoc """
-  Implement LibOss.Client behavior with Finch
+  Implement LibOss.Http behavior with Finch
   """
 
-  alias LibOss.{Client, Error}
+  alias LibOss.{Http, Error}
 
-  @behaviour Client
+  @behaviour Http
 
   # types
   @type t :: %__MODULE__{
           name: GenServer.name()
         }
 
-  @enforce_keys ~w(name)a
+  defstruct name: __MODULE__
 
-  defstruct @enforce_keys
-
-  @impl Client
+  @impl Http
   def new(opts) do
     opts = opts |> Keyword.put_new(:name, __MODULE__)
     struct(__MODULE__, opts)
   end
 
-  def child_spec(opts) do
-    client = Keyword.fetch!(opts, :client)
-    %{id: {__MODULE__, client.name}, start: {__MODULE__, :start_link, [opts]}}
-  end
-
-  @impl Client
-  def do_request(client, method, path, headers, body, params, opts) do
+  @impl Http
+  def do_request(http, method, path, headers, body, params, opts) do
     with opts <- Keyword.put_new(opts, :receive_timeout, 2000),
-         url <- path <> "?" <> URI.encode_query(params),
          req <-
            Finch.build(
              method,
-             url,
+             url(path, params),
              headers,
              body,
              opts
            ) do
-      Finch.request(req, client.name)
+      Finch.request(req, http.name)
       |> case do
         {:ok, %Finch.Response{status: status, body: body}} when status in 200..299 ->
           {:ok, body}
@@ -88,9 +80,18 @@ defmodule LibOss.Client.Default do
     end
   end
 
-  @impl Client
+  defp url(path, nil), do: path
+  defp url(path, params) when params == %{}, do: path
+  defp url(path, params), do: path <> "?" <> URI.encode_query(params)
+
+  def child_spec(opts) do
+    http = Keyword.fetch!(opts, :http)
+    %{id: {__MODULE__, http.name}, start: {__MODULE__, :start_link, [opts]}}
+  end
+
+  @impl Http
   def start_link(opts) do
-    {client, _opts} = Keyword.pop!(opts, :client)
-    Finch.start_link(name: client.name)
+    {http, _opts} = Keyword.pop!(opts, :http)
+    Finch.start_link(name: http.name)
   end
 end
