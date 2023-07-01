@@ -22,6 +22,7 @@ defmodule LibOss.MixProject do
   defp deps do
     [
       {:nimble_options, "~> 0.5"},
+      {:mime, "~> 2.0"},
       {:jason, "~> 1.4", optional: true},
       {:finch, "~> 0.16", optional: true},
       {:ex_doc, "~> 0.29", only: :dev, runtime: false}

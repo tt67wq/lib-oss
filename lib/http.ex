@@ -6,30 +6,69 @@ defmodule LibOss.Http do
 
   @type t :: struct()
   @type opts :: keyword()
-  @type method :: Finch.Request.method()
-  @type path :: bitstring()
-  @type headers :: [%{String.t() => String.t()}]
-  @type body :: iodata() | nil
-  @type params :: %{String.t() => any()} | nil
 
   @callback new(opts()) :: t()
   @callback start_link(http: t()) :: GenServer.on_start()
   @callback do_request(
               http :: t(),
-              method :: method(),
-              path :: bitstring(),
-              headers :: headers(),
-              body :: body(),
-              params :: params(),
-              opts :: opts()
+              req :: LibOss.Http.Request.t()
             ) ::
               {:ok, iodata()} | {:error, Error.t()}
 
   defp delegate(%module{} = http, func, args),
     do: apply(module, func, [http | args])
 
-  def do_request(http, method, path, headers, body, params, opts \\ []) do
-    delegate(http, :do_request, [method, path, headers, body, params, opts])
+  def do_request(http, req), do: delegate(http, :do_request, [req])
+end
+
+defmodule LibOss.Http.Request do
+  @moduledoc """
+  http request
+  """
+  @type opts :: keyword()
+  @type method :: Finch.Request.method()
+  @type headers :: [{String.t(), String.t()}]
+  @type body :: iodata() | nil
+  @type params :: %{String.t() => bitstring()} | nil
+
+  @type t :: %__MODULE__{
+          scheme: String.t(),
+          host: String.t(),
+          method: method(),
+          path: bitstring(),
+          headers: headers(),
+          body: body(),
+          params: params(),
+          opts: opts()
+        }
+
+  defstruct [
+    :scheme,
+    :host,
+    :method,
+    :path,
+    :headers,
+    :body,
+    :params,
+    :opts
+  ]
+
+  @spec url(t()) :: String.t()
+  def url(req) do
+    query =
+      if is_nil(req.params) do
+        ""
+      else
+        req.params |> URI.encode_query()
+      end
+
+    %URI{
+      scheme: req.scheme,
+      host: req.host,
+      path: req.path,
+      query: query
+    }
+    |> URI.to_string()
   end
 end
 
@@ -50,20 +89,20 @@ defmodule LibOss.Http.Default do
   defstruct name: __MODULE__
 
   @impl Http
-  def new(opts) do
+  def new(opts \\ []) do
     opts = opts |> Keyword.put_new(:name, __MODULE__)
     struct(__MODULE__, opts)
   end
 
   @impl Http
-  def do_request(http, method, path, headers, body, params, opts) do
-    with opts <- Keyword.put_new(opts, :receive_timeout, 2000),
+  def do_request(http, req) do
+    with opts <- Keyword.put_new(req.opts, :receive_timeout, 5000),
          req <-
            Finch.build(
-             method,
-             url(path, params),
-             headers,
-             body,
+             req.method,
+             Http.Request.url(req),
+             req.headers,
+             req.body,
              opts
            ) do
       Finch.request(req, http.name)
@@ -79,10 +118,6 @@ defmodule LibOss.Http.Default do
       end
     end
   end
-
-  defp url(path, nil), do: path
-  defp url(path, params) when params == %{}, do: path
-  defp url(path, params), do: path <> "?" <> URI.encode_query(params)
 
   def child_spec(opts) do
     http = Keyword.fetch!(opts, :http)
