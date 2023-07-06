@@ -19,12 +19,18 @@ defmodule LibOss.Http do
     do: apply(module, func, [http | args])
 
   def do_request(http, req), do: delegate(http, :do_request, [req])
+
+  def start_link(%module{} = http) do
+    apply(module, :start_link, [[http: http]])
+  end
 end
 
 defmodule LibOss.Http.Request do
   @moduledoc """
   http request
   """
+  require Logger
+
   @type opts :: keyword()
   @type method :: Finch.Request.method()
   @type headers :: [{String.t(), String.t()}]
@@ -53,22 +59,28 @@ defmodule LibOss.Http.Request do
     :opts
   ]
 
-  @spec url(t()) :: String.t()
+  @spec url(t()) :: URI.t()
   def url(req) do
     query =
-      if is_nil(req.params) do
-        ""
+      if req.params in [nil, %{}] do
+        nil
       else
         req.params |> URI.encode_query()
+      end
+
+    port =
+      case req.scheme do
+        "https" -> 443
+        _ -> 80
       end
 
     %URI{
       scheme: req.scheme,
       host: req.host,
       path: req.path,
-      query: query
+      query: query,
+      port: port
     }
-    |> URI.to_string()
   end
 end
 
@@ -77,6 +89,7 @@ defmodule LibOss.Http.Default do
   Implement LibOss.Http behavior with Finch
   """
 
+  require Logger
   alias LibOss.{Http, Error}
 
   @behaviour Http
@@ -96,8 +109,8 @@ defmodule LibOss.Http.Default do
 
   @impl Http
   def do_request(http, req) do
-    with opts <- Keyword.put_new(req.opts, :receive_timeout, 5000),
-         req <-
+    with opts <- opts(req.opts),
+         finch_req <-
            Finch.build(
              req.method,
              Http.Request.url(req),
@@ -105,7 +118,18 @@ defmodule LibOss.Http.Default do
              req.body,
              opts
            ) do
-      Finch.request(req, http.name)
+      Logger.debug(%{
+        "method" => req.method,
+        "url" => Http.Request.url(req) |> URI.to_string(),
+        "params" => req.params,
+        "headers" => req.headers,
+        "body" => req.body,
+        "opts" => opts,
+        "req" => finch_req
+      })
+
+      finch_req
+      |> Finch.request(http.name)
       |> case do
         {:ok, %Finch.Response{status: status, body: body}} when status in 200..299 ->
           {:ok, body}
@@ -114,10 +138,14 @@ defmodule LibOss.Http.Default do
           {:error, Error.new("status: #{status}, body: #{body}")}
 
         {:error, exception} ->
+          raise exception
           {:error, Error.new(inspect(exception))}
       end
     end
   end
+
+  defp opts(nil), do: [receive_timeout: 5000]
+  defp opts(options), do: Keyword.put_new(options, :receive_timeout, 5000)
 
   def child_spec(opts) do
     http = Keyword.fetch!(opts, :http)

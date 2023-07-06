@@ -9,7 +9,7 @@ tasks:
       - mix clean;mix compile
   test:
     env:
-      MIX_ENV: dev
+      MIX_ENV: test
     cmds:
       - mix compile
       - mix test

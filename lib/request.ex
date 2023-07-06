@@ -105,11 +105,17 @@ defmodule LibOss.Request do
 
   @spec build_headers(t(), LibOss.t()) :: t()
   def build_headers(request, client) do
+    host =
+      case request.bucket do
+        "" -> client.endpoint
+        _ -> request.bucket <> "." <> client.endpoint
+      end
+
     headers = [
-      {"Host", client.endpoint},
+      {"Host", host},
       {"Content-Type", content_type(request)},
       {"Content-MD5", content_md5(request)},
-      {"Content-Length", byte_size(request.body)},
+      {"Content-Length", byte_size(request.body) |> to_string()},
       {"Date", gmt_now()} | request.headers
     ]
 
@@ -119,7 +125,7 @@ defmodule LibOss.Request do
   @spec auth(t(), LibOss.t()) :: t()
   def auth(request, client) do
     headers = [
-      {"Authorization", "OSS#{client.access_key_id}:#{signature(request, client)}}"}
+      {"Authorization", "OSS #{client.access_key_id}:#{signature(request, client)}"}
       | request.headers
     ]
 
@@ -160,8 +166,15 @@ defmodule LibOss.Request do
     |> Enum.join("\n")
   end
 
-  defp get_header(request, header_key),
-    do: Enum.find_value(request.headers, fn {^header_key, v} -> v end)
+  @spec get_header(t(), String.t()) :: binary()
+  defp get_header(request, header_key) do
+    request.headers
+    |> Enum.find(fn {k, _} -> k == header_key end)
+    |> then(fn
+      {_, v} -> v
+      nil -> ""
+    end)
+  end
 
   @spec expires_time(t()) :: binary()
   defp expires_time(%{expires: 0} = request) do
@@ -227,6 +240,7 @@ defmodule LibOss.Request do
     |> Base.encode64()
   end
 
+  @spec gmt_now() :: binary()
   defp gmt_now() do
     {:ok, dt} = DateTime.now("Etc/UTC")
     Calendar.strftime(dt, "%a, %d %b %Y %H:%M:%S GMT")

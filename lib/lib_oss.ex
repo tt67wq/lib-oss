@@ -5,6 +5,11 @@ defmodule LibOss do
   alias LibOss.{Error}
 
   @lib_oss_opts_schema [
+    name: [
+      type: :atom,
+      doc: "LibOss name",
+      default: __MODULE__
+    ],
     access_key_id: [
       type: :string,
       doc: "OSS access key id",
@@ -28,6 +33,7 @@ defmodule LibOss do
   ]
 
   @type t :: %__MODULE__{
+          name: atom(),
           access_key_id: String.t(),
           access_key_secret: String.t(),
           endpoint: String.t(),
@@ -36,12 +42,21 @@ defmodule LibOss do
   @type lib_oss_opts_t :: keyword(unquote(NimbleOptions.option_typespec(@lib_oss_opts_schema)))
   @type bucket :: bitstring()
 
-  defstruct [:access_key_id, :access_key_secret, :endpoint, :http_impl]
+  defstruct [:name, :access_key_id, :access_key_secret, :endpoint, :http_impl]
 
   @spec new(lib_oss_opts_t()) :: t()
   def new(opts) do
     opts = opts |> NimbleOptions.validate!(@lib_oss_opts_schema)
     struct(__MODULE__, opts)
+  end
+
+  def child_spec(opts) do
+    client = Keyword.fetch!(opts, :client)
+    %{id: {__MODULE__, client.name}, start: {__MODULE__, :start_link, [opts]}}
+  end
+
+  def start_link(client: client) do
+    LibOss.Http.start_link(client.http_impl)
   end
 
   @spec request(t(), LibOss.Request.t()) :: {:ok, any()} | {:error, Error.t()}
@@ -79,7 +94,7 @@ defmodule LibOss do
       LibOss.Request.new(
         method: :put,
         object: object,
-        resouce: Path.join(["/", bucket, object]),
+        resource: Path.join(["/", bucket, object]),
         bucket: bucket,
         body: data
       )
