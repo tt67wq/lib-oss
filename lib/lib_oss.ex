@@ -73,17 +73,18 @@ defmodule LibOss do
       end
 
     # to http request
-    http_req = %LibOss.Http.Request{
+    [
       scheme: "https",
+      port: 443,
       host: host,
       method: req.method,
       path: Path.join(["/", req.object]),
       headers: req.headers,
       body: req.body,
       params: req.params
-    }
-
-    LibOss.Http.do_request(client.http_impl, http_req)
+    ]
+    |> LibOss.Http.Request.new()
+    |> then(&LibOss.Http.do_request(client.http_impl, &1))
   end
 
   # object

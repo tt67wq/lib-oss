@@ -8,16 +8,15 @@ defmodule LibOss.HttpTest do
   end
 
   test "get", %{http_impl: http_impl} do
-    req = %LibOss.Http.Request{
-      scheme: "https",
-      host: "www.baidu.com",
-      method: :get,
-      path: "/",
-      headers: [],
-      body: nil,
-      params: nil,
-      opts: []
-    }
+    req =
+      [
+        scheme: "https",
+        port: 443,
+        host: "www.baidu.com",
+        method: :get,
+        path: "/"
+      ]
+      |> LibOss.Http.Request.new()
 
     assert {:ok, _} = LibOss.Http.do_request(http_impl, req)
   end
