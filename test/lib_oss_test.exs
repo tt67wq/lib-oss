@@ -34,4 +34,8 @@ defmodule LibOssTest do
   test "get_object", %{cli: cli, bucket: bucket} do
     assert {:ok, "hello world"} = LibOss.get_object(cli, bucket, "/test/test.txt")
   end
+
+  test "delete_object", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test.txt")
+  end
 end

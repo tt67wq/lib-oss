@@ -129,7 +129,7 @@ defmodule LibOss do
 
   def get_token(cli, bucket, object, expire_sec \\ 3600, callback \\ "")
 
-  def get_token(cli, bucket, object, expire_sec) do
+  def get_token(cli, bucket, object, expire_sec, callback) do
     expire =
       DateTime.now!("Etc/UTC")
       |> DateTime.add(expire_sec, :second)
@@ -212,6 +212,28 @@ defmodule LibOss do
         resource: Path.join(["/", bucket, object]),
         bucket: bucket,
         headers: req_headers
+      )
+
+    request(client, req)
+  end
+
+  @doc """
+  调用DeleteObject删除某个文件（Object）。
+
+  Doc: https://help.aliyun.com/document_detail/31982.html
+
+  ## Examples
+
+      {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test.txt")
+  """
+  @spec delete_object(t(), bucket(), String.t()) :: {:ok, any()} | {:error, Error.t()}
+  def delete_object(client, bucket, object) do
+    req =
+      LibOss.Request.new(
+        method: :delete,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket
       )
 
     request(client, req)
