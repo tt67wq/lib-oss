@@ -32,6 +32,10 @@ defmodule LibOss do
     ]
   ]
 
+  @callback_body """
+  filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}
+  """
+
   @type t :: %__MODULE__{
           name: atom(),
           access_key_id: String.t(),
@@ -102,7 +106,66 @@ defmodule LibOss do
     |> then(&LibOss.Http.do_request(client.http_impl, &1))
   end
 
-  #### object operations: https://help.aliyun.com/document_detail/31977.html?spm=a2c4g.31948.0.0
+  #### object operations: https://help.aliyun.com/document_detail/31977.html
+
+  @doc """
+  function description
+  通过Web端直传文件（Object）到OSS的签名生成
+
+  Doc: https://help.aliyun.com/document_detail/31926.html
+
+  ## Example
+
+      iex> LibOss.get_token(cli, bucket, "/test/test.txt", 3600)
+      {:ok, "{\"accessid\":\"LTAI1k8kxWG8JpUF\",\"callback\":\"=\",\"dir\":\"/test/test.txt\",\".........ePNPyWQo=\"}"}
+  """
+  @spec get_token(
+          t(),
+          String.t(),
+          String.t(),
+          integer(),
+          String.t()
+        ) :: {:ok, String.t()}
+  def get_token(cli, bucket, object, expire_sec, callback \\ "") do
+    expire =
+      DateTime.now!("Etc/UTC")
+      |> DateTime.add(expire_sec, :second)
+
+    policy =
+      %{
+        "expiration" => DateTime.to_iso8601(expire),
+        "conditions" => [["starts-with", "$key", object]]
+      }
+      |> Jason.encode!()
+      |> String.trim()
+      |> Base.encode64()
+
+    signature =
+      policy
+      |> LibOss.Utils.do_sign(cli.access_key_secret)
+
+    base64_callback_body =
+      %{
+        "callbackUrl" => callback,
+        "callbackBody" => @callback_body,
+        "callbackBodyType" => "application/x-www-form-urlencoded"
+      }
+      |> Jason.encode!()
+      |> String.trim()
+      |> Base.encode64()
+
+    %{
+      "accessid" => cli.access_key_id,
+      "host" => "https://#{bucket}.#{cli.endpoint}",
+      "policy" => policy,
+      "signature" => signature,
+      "expire" => DateTime.to_unix(expire),
+      "dir" => object,
+      "callback" => base64_callback_body
+    }
+    |> Jason.encode()
+    |> LibOss.Utils.debug()
+  end
 
   @doc """
   调用PutObject接口上传文件（Object）。
@@ -127,6 +190,18 @@ defmodule LibOss do
     request(client, req)
   end
 
+  @doc """
+  GetObject接口用于获取某个文件（Object）。此操作需要对此Object具有读权限。
+
+  Doc: https://help.aliyun.com/document_detail/31980.html
+
+  req_headers的具体参数可参考文档中”请求头“部分说明
+
+  ## Examples
+
+      LibOss.get_object(cli, bucket, "/test/test.txt")
+  """
+  @spec get_object(t(), bucket(), String.t(), list()) :: {:ok, iodata()} | {:error, Error.t()}
   def get_object(client, bucket, object, req_headers \\ []) do
     req =
       LibOss.Request.new(
@@ -138,6 +213,5 @@ defmodule LibOss do
       )
 
     request(client, req)
-    |> LibOss.Utils.debug()
   end
 end

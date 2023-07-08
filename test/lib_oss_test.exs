@@ -23,6 +23,10 @@ defmodule LibOssTest do
     [cli: cli, bucket: bucket]
   end
 
+  test "get_token", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.get_token(cli, bucket, "/test/test.txt", 3600)
+  end
+
   test "put_object", %{cli: cli, bucket: bucket} do
     assert {:ok, _} = LibOss.put_object(cli, bucket, "/test/test.txt", "hello world")
   end

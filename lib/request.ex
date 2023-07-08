@@ -136,14 +136,7 @@ defmodule LibOss.Request do
   defp signature(request, client) do
     request
     |> string_to_sign()
-    |> do_sign(client.access_key_secret)
-  end
-
-  @spec do_sign(binary(), iodata()) :: binary()
-  defp do_sign(string_to_sign, key) do
-    :hmac
-    |> :crypto.mac(:sha, key, string_to_sign)
-    |> Base.encode64()
+    |> LibOss.Utils.do_sign(client.access_key_secret)
   end
 
   @spec string_to_sign(t()) :: binary()

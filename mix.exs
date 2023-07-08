@@ -23,7 +23,7 @@ defmodule LibOss.MixProject do
     [
       {:nimble_options, "~> 0.5"},
       {:mime, "~> 2.0"},
-      {:jason, "~> 1.4", optional: true},
+      {:jason, "~> 1.4"},
       {:finch, "~> 0.16", optional: true},
       {:ex_doc, "~> 0.29", only: :dev, runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},
