@@ -116,17 +116,20 @@ defmodule LibOss do
 
   ## Example
 
-      iex> LibOss.get_token(cli, bucket, "/test/test.txt", 3600)
+      iex> LibOss.get_token(cli, bucket, "/test/test.txt")
       {:ok, "{\"accessid\":\"LTAI1k8kxWG8JpUF\",\"callback\":\"=\",\"dir\":\"/test/test.txt\",\".........ePNPyWQo=\"}"}
   """
   @spec get_token(
           t(),
           String.t(),
           String.t(),
-          integer(),
+          non_neg_integer(),
           String.t()
         ) :: {:ok, String.t()}
-  def get_token(cli, bucket, object, expire_sec, callback \\ "") do
+
+  def get_token(cli, bucket, object, expire_sec \\ 3600, callback \\ "")
+
+  def get_token(cli, bucket, object, expire_sec) do
     expire =
       DateTime.now!("Etc/UTC")
       |> DateTime.add(expire_sec, :second)
@@ -164,7 +167,6 @@ defmodule LibOss do
       "callback" => base64_callback_body
     }
     |> Jason.encode()
-    |> LibOss.Utils.debug()
   end
 
   @doc """
