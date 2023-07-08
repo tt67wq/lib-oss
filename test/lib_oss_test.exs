@@ -26,4 +26,8 @@ defmodule LibOssTest do
   test "put_object", %{cli: cli, bucket: bucket} do
     assert {:ok, _} = LibOss.put_object(cli, bucket, "/test/test.txt", "hello world")
   end
+
+  test "get_object", %{cli: cli, bucket: bucket} do
+    assert {:ok, "hello world"} = LibOss.get_object(cli, bucket, "/test/test.txt")
+  end
 end

@@ -44,6 +44,21 @@ defmodule LibOss do
 
   defstruct [:name, :access_key_id, :access_key_secret, :endpoint, :http_impl]
 
+  @doc """
+  create a new oss client instance
+
+  ## Params
+  #{NimbleOptions.docs(@lib_oss_opts_schema)}
+
+
+  ## Examples
+
+      LibOss.new(
+        endpoint: "oss-cn-hangzhou.aliyuncs.com",
+        access_key_id: "access_key_id",
+        access_key_secret: "access_key_secret"
+      )
+  """
   @spec new(lib_oss_opts_t()) :: t()
   def new(opts) do
     opts = opts |> NimbleOptions.validate!(@lib_oss_opts_schema)
@@ -60,7 +75,7 @@ defmodule LibOss do
   end
 
   @spec request(t(), LibOss.Request.t()) :: {:ok, any()} | {:error, Error.t()}
-  def request(client, req) do
+  defp request(client, req) do
     req =
       req
       |> LibOss.Request.build_headers(client)
@@ -87,8 +102,17 @@ defmodule LibOss do
     |> then(&LibOss.Http.do_request(client.http_impl, &1))
   end
 
-  # object
+  #### object operations: https://help.aliyun.com/document_detail/31977.html?spm=a2c4g.31948.0.0
 
+  @doc """
+  调用PutObject接口上传文件（Object）。
+
+  Doc: https://help.aliyun.com/document_detail/31978.html
+
+  ## Examples
+
+      LibOss.put_object(cli, bucket, "/test/test.txt", "hello world")
+  """
   @spec put_object(t(), bucket(), String.t(), binary()) :: {:ok, any()} | {:error, Error.t()}
   def put_object(client, bucket, object, data) do
     req =
@@ -101,5 +125,19 @@ defmodule LibOss do
       )
 
     request(client, req)
+  end
+
+  def get_object(client, bucket, object, req_headers \\ []) do
+    req =
+      LibOss.Request.new(
+        method: :get,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket,
+        headers: req_headers
+      )
+
+    request(client, req)
+    |> LibOss.Utils.debug()
   end
 end
