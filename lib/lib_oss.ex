@@ -78,7 +78,7 @@ defmodule LibOss do
     LibOss.Http.start_link(client.http_impl)
   end
 
-  @spec request(t(), LibOss.Request.t()) :: {:ok, any()} | {:error, Error.t()}
+  @spec request(t(), LibOss.Request.t()) :: {:ok, LibOss.Http.Response.t()} | {:error, Error.t()}
   defp request(client, req) do
     req =
       req
@@ -91,13 +91,25 @@ defmodule LibOss do
         _ -> "#{req.bucket}.#{client.endpoint}"
       end
 
+    object =
+      req.sub_resources
+      |> Stream.map(fn
+        {k, nil} -> k
+        {k, v} -> "#{k}=#{v}"
+      end)
+      |> Enum.join("&")
+      |> case do
+        "" -> req.object
+        query_string -> "#{req.object}?#{query_string}"
+      end
+
     # to http request
     [
       scheme: "https",
       port: 443,
       host: host,
       method: req.method,
-      path: Path.join(["/", req.object]),
+      path: Path.join(["/", object]),
       headers: req.headers,
       body: req.body,
       params: req.params
@@ -215,6 +227,10 @@ defmodule LibOss do
       )
 
     request(client, req)
+    |> case do
+      {:ok, %{body: body}} -> {:ok, body}
+      {:error, error} -> {:error, error}
+    end
   end
 
   @doc """
@@ -234,6 +250,122 @@ defmodule LibOss do
         object: object,
         resource: Path.join(["/", bucket, object]),
         bucket: bucket
+      )
+
+    request(client, req)
+  end
+
+  #### multipart operations: https://help.aliyun.com/document_detail/155825.html
+
+  @doc """
+  使用Multipart Upload模式传输数据前，您必须先调用InitiateMultipartUpload接口来通知OSS初始化一个Multipart Upload事件。
+
+  Doc: https://help.aliyun.com/document_detail/31992.html
+
+  ## Examples
+
+      iex> init_multi_uploads(client, bucket, "test.txt")
+      {:ok, "upload_id"}
+  """
+  def init_multi_upload(client, bucket, object, req_headers \\ []) do
+    req =
+      LibOss.Request.new(
+        method: :post,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket,
+        headers: req_headers,
+        sub_resources: [{"uploads", nil}]
+      )
+
+    request(client, req)
+    |> case do
+      {:ok, %{body: xml}} ->
+        regex = ~r/<UploadId>(.*?)<\/UploadId>/
+        [match | _] = Regex.run(regex, xml)
+        {:ok, String.slice(match, 10..-12)}
+
+      err ->
+        err
+    end
+  end
+
+  @doc """
+  初始化一个MultipartUpload后，调用UploadPart接口根据指定的Object名和uploadId来分块（Part）上传数据。
+
+  Doc: https://help.aliyun.com/document_detail/31993.html
+
+  ## Examples
+
+      iex> upload_part(client, bucket, "test.txt", "upload_id", 1, "hello world")
+      {:ok, "etag"}
+  """
+  @spec upload_part(
+          t(),
+          bucket(),
+          String.t(),
+          String.t(),
+          non_neg_integer(),
+          binary()
+        ) :: {:ok, bitstring()} | {:error, Error.t()}
+  def upload_part(client, bucket, object, upload_id, partNumber, data) do
+    req =
+      LibOss.Request.new(
+        method: :put,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        sub_resources: [{"partNumber", "#{partNumber}"}, {"uploadId", upload_id}],
+        bucket: bucket,
+        body: data
+      )
+
+    request(client, req)
+    |> case do
+      {:ok, %{headers: headers}} ->
+        headers
+        |> Enum.find(fn {k, _} -> k == "etag" end)
+        |> (fn
+              {_, v} -> {:ok, v}
+              nil -> Error.new("etag not found")
+            end).()
+    end
+  end
+
+  @doc """
+  所有数据Part都上传完成后，您必须调用CompleteMultipartUpload接口来完成整个文件的分片上传。
+
+  ## Examples
+
+      iex> {:ok, etag1} = upload_part(client, bucket, "test.txt", "upload_id", 1, part1)
+      iex> {:ok, etag2} = upload_part(client, bucket, "test.txt", "upload_id", 2, part2)
+      iex> {:ok, etag3} = upload_part(client, bucket, "test.txt", "upload_id", 3, part3)
+      iex> complete_multipart_upload(client, bucket, "test.txt", "upload_id", [{1, etag1}, {2, etag2}, {3, etag3}])
+      {:ok, _}
+  """
+  @spec complete_multipart_upload(
+          t(),
+          bucket(),
+          String.t(),
+          String.t(),
+          [{non_neg_integer(), bitstring()}]
+        ) :: {:ok, any()} | {:error, Error.t()}
+  def complete_multipart_upload(client, bucket, object, upload_id, parts) do
+    # format parts
+    body =
+      parts
+      |> Enum.map(fn {partNumber, etag} ->
+        "<Part><PartNumber>#{partNumber}</PartNumber><ETag>#{etag}</ETag></Part>"
+      end)
+      |> Enum.join("")
+
+    req =
+      LibOss.Request.new(
+        method: :post,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        sub_resources: [{"uploadId", upload_id}],
+        bucket: bucket,
+        body: "<CompleteMultipartUpload>#{body}</CompleteMultipartUpload>"
       )
 
     request(client, req)

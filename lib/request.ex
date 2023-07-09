@@ -30,7 +30,7 @@ defmodule LibOss.Request do
       required: true
     ],
     params: [
-      type: :map,
+      type: {:map, :string, :string},
       doc: "OSS query params",
       default: %{}
     ],
@@ -63,15 +63,20 @@ defmodule LibOss.Request do
 
   # types
   @type request_schema_t :: keyword(unquote(NimbleOptions.option_typespec(@request_schema)))
+  @type method :: Finch.Request.method()
+  @type headers :: [{String.t(), String.t()}]
+  @type body :: iodata() | nil
+  @type params :: %{String.t() => binary()} | nil
+
   @type t :: %__MODULE__{
-          method: atom(),
+          method: method(),
           object: String.t(),
           resource: String.t(),
           sub_resources: [{String.t(), String.t()}],
           bucket: String.t(),
-          params: %{String.t() => String.t()},
-          body: iodata(),
-          headers: [{String.t(), String.t()}],
+          params: params(),
+          body: body(),
+          headers: headers(),
           expires: non_neg_integer()
         }
 
@@ -136,6 +141,7 @@ defmodule LibOss.Request do
   defp signature(request, client) do
     request
     |> string_to_sign()
+    # |> LibOss.Utils.debug()
     |> LibOss.Utils.do_sign(client.access_key_secret)
   end
 

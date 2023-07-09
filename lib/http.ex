@@ -13,7 +13,7 @@ defmodule LibOss.Http do
               http :: t(),
               req :: LibOss.Http.Request.t()
             ) ::
-              {:ok, iodata()} | {:error, Error.t()}
+              {:ok, LibOss.Http.Response.t()} | {:error, Error.t()}
 
   defp delegate(%module{} = http, func, args),
     do: apply(module, func, [http | args])
@@ -83,7 +83,7 @@ defmodule LibOss.Http.Request do
   @type method :: Finch.Request.method()
   @type headers :: [{String.t(), String.t()}]
   @type body :: iodata() | nil
-  @type params :: %{String.t() => bitstring()} | nil
+  @type params :: %{String.t() => binary()} | nil
   @type http_request_schema_t ::
           keyword(unquote(NimbleOptions.option_typespec(@http_request_schema)))
 
@@ -142,6 +142,46 @@ defmodule LibOss.Http.Request do
   end
 end
 
+defmodule LibOss.Http.Response do
+  @moduledoc """
+  http response
+  """
+  @http_response_schema [
+    status_code: [
+      type: :integer,
+      doc: "http status code",
+      default: 200
+    ],
+    headers: [
+      type: {:list, :any},
+      doc: "http headers",
+      default: []
+    ],
+    body: [
+      type: :string,
+      doc: "http body",
+      default: ""
+    ]
+  ]
+
+  @type t :: %__MODULE__{
+          status_code: non_neg_integer(),
+          headers: [{String.t(), String.t()}],
+          body: iodata() | nil
+        }
+
+  @type http_response_schema_t ::
+          keyword(unquote(NimbleOptions.option_typespec(@http_response_schema)))
+
+  defstruct [:status_code, :headers, :body]
+
+  @spec new(http_response_schema_t()) :: t()
+  def new(opts) do
+    opts = opts |> NimbleOptions.validate!(@http_response_schema)
+    struct(__MODULE__, opts)
+  end
+end
+
 defmodule LibOss.Http.Default do
   @moduledoc """
   Implement LibOss.Http behavior with Finch
@@ -189,8 +229,9 @@ defmodule LibOss.Http.Default do
       finch_req
       |> Finch.request(http.name)
       |> case do
-        {:ok, %Finch.Response{status: status, body: body}} when status in 200..299 ->
-          {:ok, body}
+        {:ok, %Finch.Response{status: status, body: body, headers: headers}}
+        when status in 200..299 ->
+          {:ok, Http.Response.new(status_code: status, body: body, headers: headers)}
 
         {:ok, %Finch.Response{status: status, body: body}} ->
           {:error, Error.new("status: #{status}, body: #{body}")}
