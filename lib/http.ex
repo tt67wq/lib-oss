@@ -84,8 +84,7 @@ defmodule LibOss.Http.Request do
   @type headers :: [{String.t(), String.t()}]
   @type body :: iodata() | nil
   @type params :: %{String.t() => binary()} | nil
-  @type http_request_schema_t ::
-          keyword(unquote(NimbleOptions.option_typespec(@http_request_schema)))
+  @type http_request_schema_t :: [unquote(NimbleOptions.option_typespec(@http_request_schema))]
 
   @type t :: %__MODULE__{
           scheme: String.t(),
@@ -170,8 +169,7 @@ defmodule LibOss.Http.Response do
           body: iodata() | nil
         }
 
-  @type http_response_schema_t ::
-          keyword(unquote(NimbleOptions.option_typespec(@http_response_schema)))
+  @type http_response_schema_t :: [unquote(NimbleOptions.option_typespec(@http_response_schema))]
 
   defstruct [:status_code, :headers, :body]
 
