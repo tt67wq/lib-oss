@@ -12,7 +12,7 @@ defmodule LibOss.Request do
     object: [
       type: :string,
       doc: "OSS object",
-      required: true
+      default: ""
     ],
     resource: [
       type: :string,
@@ -195,6 +195,12 @@ defmodule LibOss.Request do
     end
   end
 
+  # 发送请求中希望访问的OSS目标资源被称为CanonicalizedResource，构建方法如下：
+
+  # 如果既有BucketName也有ObjectName，则则CanonicalizedResource格式为/BucketName/ObjectName
+  # 如果仅有BucketName而没有ObjectName，则CanonicalizedResource格式为/BucketName/。
+  # 如果既没有BucketName也没有ObjectName，则CanonicalizedResource为正斜线（/）。
+  # 如果请求的资源包括子资源（SubResource），则所有的子资源需按照字典序升序排列，并以&为分隔符生成子资源字符串。
   defp canonicalize_resource(%{resource: resource, sub_resources: nil}), do: resource
 
   defp canonicalize_resource(%{resource: resource, sub_resources: sub_resources}) do

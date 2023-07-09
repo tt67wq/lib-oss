@@ -280,10 +280,23 @@ defmodule LibOss do
 
     request(client, req)
     |> case do
-      {:ok, %{body: xml}} ->
-        regex = ~r/<UploadId>(.*?)<\/UploadId>/
-        [match | _] = Regex.run(regex, xml)
-        {:ok, String.slice(match, 10..-12)}
+      {:ok, %{body: body}} ->
+        # %{
+        #   "InitiateMultipartUploadResult" => %{
+        #     "Bucket" => "...",
+        #     "Key" => "test/test.txt",
+        #     "UploadId" => "uploadid"
+        #   }
+        # }
+        body
+        |> XmlToMap.naive_map()
+        |> case do
+          %{"InitiateMultipartUploadResult" => %{"UploadId" => upload_id}} ->
+            {:ok, upload_id}
+
+          _ ->
+            Error.new("invalid response body: #{inspect(body)}")
+        end
 
       err ->
         err
@@ -369,5 +382,117 @@ defmodule LibOss do
       )
 
     request(client, req)
+  end
+
+  #### bucket operations: https://help.aliyun.com/document_detail/31959.html
+
+  @doc """
+  调用PutBucket接口创建存储空间（Bucket）。
+
+  Doc: https://help.aliyun.com/document_detail/31959.html
+
+  ## Examples
+
+      {:ok, _} = LibOss.put_bucket(cli, your-new-bucket)
+  """
+  @spec put_bucket(t(), bucket(), bitstring(), bitstring()) :: {:ok, any()} | {:error, Error.t()}
+  def put_bucket(client, bucket, storage_class \\ "Standard", data_redundancy_type \\ "LRS")
+
+  def put_bucket(client, bucket, storage_class, data_redundancy_type) do
+    body = """
+    <?xml version="1.0" encoding="UTF-8"?>
+    <CreateBucketConfiguration>
+        <StorageClass>#{storage_class}</StorageClass>
+        <DataRedundancyType>#{data_redundancy_type}</DataRedundancyType>
+    </CreateBucketConfiguration>
+    """
+
+    LibOss.Request.new(
+      method: :put,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      body: body
+    )
+    |> then(&request(client, &1))
+  end
+
+  @doc """
+  调用DeleteBucket删除某个存储空间（Bucket）。
+
+  Doc: https://help.aliyun.com/document_detail/31973.html
+
+  ## Examples
+
+      {:ok, _} = LibOss.delete_bucket(cli, to-delete-bucket)
+  """
+  @spec delete_bucket(t(), bucket()) :: {:ok, any()} | {:error, Error.t()}
+  def delete_bucket(client, bucket) do
+    LibOss.Request.new(
+      method: :delete,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/"
+    )
+    |> then(&request(client, &1))
+  end
+
+  @doc """
+  GetBucket (ListObjects)接口用于列举存储空间（Bucket）中所有文件（Object）的信息。
+
+  Doc: https://help.aliyun.com/document_detail/31965.html
+
+  其中query_params具体细节参考上面链接中`请求参数`部分
+
+  ## Examples
+
+      iex> LibOss.get_bucket(cli, bucket, %{"prefix" => "test/test"})
+      {:ok, [
+        %{
+         "ETag" => "\"A5D2B2E40EF7EBA1C788697D31C27A78-3\"",
+         "Key" => "test/test.txt",
+         "LastModified" => "2023-07-09T14:41:08.000Z",
+         "Owner" => %{
+           "DisplayName" => "1074124462684153",
+           "ID" => "1074124462684153"
+         },
+         "Size" => "409608",
+         "StorageClass" => "Standard",
+         "Type" => "Multipart"
+       },
+       %{
+         "ETag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
+         "Key" => "test/test_1.txt",
+         "LastModified" => "2023-07-09T14:41:08.000Z",
+         "Owner" => %{
+           "DisplayName" => "1074124462684153",
+           "ID" => "1074124462684153"
+         },
+         "Size" => "11",
+         "StorageClass" => "Standard",
+         "Type" => "Normal"
+       }
+      ]}
+  """
+  @spec get_bucket(t(), bucket(), %{String.t() => String.t()}) ::
+          {:ok, [any()]} | {:error, Error.t()}
+  def get_bucket(client, bucket, query_params) do
+    LibOss.Request.new(
+      method: :get,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      params: query_params
+    )
+    |> then(&request(client, &1))
+    |> case do
+      {:ok, %{body: body}} ->
+        body
+        |> XmlToMap.naive_map()
+        |> case do
+          %{"ListBucketResult" => %{"Contents" => ret}} -> {:ok, ret}
+          _ -> Error.new("invalid response body: #{inspect(body)}")
+        end
+
+      err ->
+        err
+    end
   end
 end
