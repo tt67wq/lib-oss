@@ -43,7 +43,7 @@ defmodule LibOss do
           endpoint: String.t(),
           http_impl: LibOss.Http.t()
         }
-  @type lib_oss_opts_t :: keyword(unquote(NimbleOptions.option_typespec(@lib_oss_opts_schema)))
+  @type lib_oss_opts_t :: [unquote(NimbleOptions.option_typespec(@lib_oss_opts_schema))]
 
   defstruct [:name, :access_key_id, :access_key_secret, :endpoint, :http_impl]
 
