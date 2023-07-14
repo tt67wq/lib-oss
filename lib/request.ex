@@ -3,6 +3,8 @@ defmodule LibOss.Request do
   request struct
   """
 
+  alias LibOss.Typespecs
+
   @request_schema [
     method: [
       type: {:in, [:get, :put, :post, :delete, :head, :options, :patch]},
@@ -62,21 +64,17 @@ defmodule LibOss.Request do
   }
 
   # types
-  @type request_schema_t :: keyword(unquote(NimbleOptions.option_typespec(@request_schema)))
-  @type method :: Finch.Request.method()
-  @type headers :: [{String.t(), String.t()}]
-  @type body :: iodata() | nil
-  @type params :: %{String.t() => binary()} | nil
+  @type request_schema_t :: [unquote(NimbleOptions.option_typespec(@request_schema))]
 
   @type t :: %__MODULE__{
-          method: method(),
+          method: Typespecs.method(),
           object: String.t(),
           resource: String.t(),
           sub_resources: [{String.t(), String.t()}],
-          bucket: String.t(),
-          params: params(),
-          body: body(),
-          headers: headers(),
+          bucket: Typespecs.bucket(),
+          params: Typespecs.params(),
+          body: Typespecs.body(),
+          headers: Typespecs.headers(),
           expires: non_neg_integer()
         }
 

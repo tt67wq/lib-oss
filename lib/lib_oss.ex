@@ -2,7 +2,7 @@ defmodule LibOss do
   @moduledoc """
   Documentation for `LibOss`.
   """
-  alias LibOss.{Error}
+  alias LibOss.{Error, Typespecs}
 
   @lib_oss_opts_schema [
     name: [
@@ -44,7 +44,6 @@ defmodule LibOss do
           http_impl: LibOss.Http.t()
         }
   @type lib_oss_opts_t :: keyword(unquote(NimbleOptions.option_typespec(@lib_oss_opts_schema)))
-  @type bucket :: bitstring()
 
   defstruct [:name, :access_key_id, :access_key_secret, :endpoint, :http_impl]
 
@@ -190,7 +189,8 @@ defmodule LibOss do
 
       LibOss.put_object(cli, bucket, "/test/test.txt", "hello world")
   """
-  @spec put_object(t(), bucket(), String.t(), binary()) :: {:ok, any()} | {:error, Error.t()}
+  @spec put_object(t(), Typespecs.bucket(), Typespecs.object(), iodata()) ::
+          {:ok, any()} | {:error, Error.t()}
   def put_object(client, bucket, object, data) do
     req =
       LibOss.Request.new(
@@ -215,7 +215,8 @@ defmodule LibOss do
 
       LibOss.get_object(cli, bucket, "/test/test.txt")
   """
-  @spec get_object(t(), bucket(), String.t(), list()) :: {:ok, iodata()} | {:error, Error.t()}
+  @spec get_object(t(), Typespecs.bucket(), String.t(), list()) ::
+          {:ok, iodata()} | {:error, Error.t()}
   def get_object(client, bucket, object, req_headers \\ []) do
     req =
       LibOss.Request.new(
@@ -242,7 +243,7 @@ defmodule LibOss do
 
       {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test.txt")
   """
-  @spec delete_object(t(), bucket(), String.t()) :: {:ok, any()} | {:error, Error.t()}
+  @spec delete_object(t(), Typespecs.bucket(), String.t()) :: {:ok, any()} | {:error, Error.t()}
   def delete_object(client, bucket, object) do
     req =
       LibOss.Request.new(
@@ -267,6 +268,12 @@ defmodule LibOss do
       iex> init_multi_uploads(client, bucket, "test.txt")
       {:ok, "upload_id"}
   """
+  @spec init_multi_upload(
+          t(),
+          Typespecs.bucket(),
+          String.t(),
+          list()
+        ) :: {:ok, String.t()} | {:error, Error.t()}
   def init_multi_upload(client, bucket, object, req_headers \\ []) do
     req =
       LibOss.Request.new(
@@ -315,7 +322,7 @@ defmodule LibOss do
   """
   @spec upload_part(
           t(),
-          bucket(),
+          Typespecs.bucket(),
           String.t(),
           String.t(),
           non_neg_integer(),
@@ -357,7 +364,7 @@ defmodule LibOss do
   """
   @spec complete_multipart_upload(
           t(),
-          bucket(),
+          Typespecs.bucket(),
           String.t(),
           String.t(),
           [{non_neg_integer(), bitstring()}]
@@ -395,7 +402,8 @@ defmodule LibOss do
 
       {:ok, _} = LibOss.put_bucket(cli, your-new-bucket)
   """
-  @spec put_bucket(t(), bucket(), bitstring(), bitstring()) :: {:ok, any()} | {:error, Error.t()}
+  @spec put_bucket(t(), Typespecs.bucket(), bitstring(), bitstring()) ::
+          {:ok, any()} | {:error, Error.t()}
   def put_bucket(client, bucket, storage_class \\ "Standard", data_redundancy_type \\ "LRS")
 
   def put_bucket(client, bucket, storage_class, data_redundancy_type) do
@@ -425,7 +433,7 @@ defmodule LibOss do
 
       {:ok, _} = LibOss.delete_bucket(cli, to-delete-bucket)
   """
-  @spec delete_bucket(t(), bucket()) :: {:ok, any()} | {:error, Error.t()}
+  @spec delete_bucket(t(), Typespecs.bucket()) :: {:ok, any()} | {:error, Error.t()}
   def delete_bucket(client, bucket) do
     LibOss.Request.new(
       method: :delete,
@@ -472,7 +480,7 @@ defmodule LibOss do
        }
       ]}
   """
-  @spec get_bucket(t(), bucket(), %{String.t() => String.t()}) ::
+  @spec get_bucket(t(), Typespecs.bucket(), %{String.t() => String.t()}) ::
           {:ok, [any()]} | {:error, Error.t()}
   def get_bucket(client, bucket, query_params) do
     LibOss.Request.new(
