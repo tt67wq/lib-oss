@@ -23,22 +23,22 @@ defmodule LibOssTest do
     [cli: cli, bucket: bucket]
   end
 
-  # test "get_token", %{cli: cli, bucket: bucket} do
-  #   assert {:ok, _} = LibOss.get_token(cli, bucket, "/test/test.txt", 3600)
-  # end
+  test "get_token", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.get_token(cli, bucket, "/test/test.txt", 3600)
+  end
 
-  # test "put_object", %{cli: cli, bucket: bucket} do
-  #   assert {:ok, _} = LibOss.put_object(cli, bucket, "/test/test.txt", "hello world")
-  # end
+  test "put_object", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.put_object(cli, bucket, "/test/test.txt", "hello world")
+  end
 
-  # test "get_object", %{cli: cli, bucket: bucket} do
-  #   assert {:ok, "hello world"} = LibOss.get_object(cli, bucket, "/test/test.txt")
-  # end
+  test "get_object", %{cli: cli, bucket: bucket} do
+    assert {:ok, "hello world"} = LibOss.get_object(cli, bucket, "/test/test.txt")
+  end
 
-  # test "delete_object", %{cli: cli, bucket: bucket} do
-  #   LibOss.put_object(cli, bucket, "/test/test_for_delete.txt", "hello world")
-  #   assert {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test_for_delete.txt")
-  # end
+  test "delete_object", %{cli: cli, bucket: bucket} do
+    LibOss.put_object(cli, bucket, "/test/test_for_delete.txt", "hello world")
+    assert {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test_for_delete.txt")
+  end
 
   defp generate_test_data(length) when is_integer(length) and length > 0 do
     :crypto.strong_rand_bytes(length)
@@ -46,13 +46,14 @@ defmodule LibOssTest do
   end
 
   test "multi_upload", %{cli: cli, bucket: bucket} do
-    assert {:ok, upload_id} = LibOss.init_multi_upload(cli, bucket, "/test/test.txt")
+    object = "/test/multi-test.txt"
+    assert {:ok, upload_id} = LibOss.init_multi_upload(cli, bucket, object)
 
     assert {:ok, etag1} =
              LibOss.upload_part(
                cli,
                bucket,
-               "/test/test.txt",
+               object,
                upload_id,
                1,
                generate_test_data(102_400)
@@ -62,7 +63,7 @@ defmodule LibOssTest do
              LibOss.upload_part(
                cli,
                bucket,
-               "/test/test.txt",
+               object,
                upload_id,
                2,
                generate_test_data(102_400)
@@ -72,7 +73,7 @@ defmodule LibOssTest do
              LibOss.upload_part(
                cli,
                bucket,
-               "/test/test.txt",
+               object,
                upload_id,
                3,
                generate_test_data(102_400)
@@ -85,14 +86,14 @@ defmodule LibOssTest do
     ]
 
     assert {:ok, _} =
-             LibOss.complete_multipart_upload(cli, bucket, "/test/test.txt", upload_id, parts)
+             LibOss.complete_multipart_upload(cli, bucket, object, upload_id, parts)
   end
 
-  # test "put/delete_bucket", %{cli: cli} do
-  #   bucket = "test-bucket-#{System.system_time(:second)}"
-  #   assert {:ok, _} = LibOss.put_bucket(cli, bucket)
-  #   assert {:ok, _} = LibOss.delete_bucket(cli, bucket)
-  # end
+  test "put/delete_bucket", %{cli: cli} do
+    bucket = "test-bucket-#{System.system_time(:second)}"
+    assert {:ok, _} = LibOss.put_bucket(cli, bucket)
+    assert {:ok, _} = LibOss.delete_bucket(cli, bucket)
+  end
 
   test "get_bucket", %{cli: cli, bucket: bucket} do
     for i <- 1..10 do
