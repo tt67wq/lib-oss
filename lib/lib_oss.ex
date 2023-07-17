@@ -189,20 +189,41 @@ defmodule LibOss do
 
       LibOss.put_object(cli, bucket, "/test/test.txt", "hello world")
   """
-  @spec put_object(t(), Typespecs.bucket(), Typespecs.object(), iodata()) ::
+  @spec put_object(
+          t(),
+          Typespecs.bucket(),
+          Typespecs.object(),
+          Typespecs.body(),
+          Typespecs.headers()
+        ) ::
           {:ok, any()} | {:error, Error.t()}
-  def put_object(client, bucket, object, data) do
+  def put_object(client, bucket, object, data, headers \\ []) do
     req =
       LibOss.Request.new(
         method: :put,
         object: object,
         resource: Path.join(["/", bucket, object]),
         bucket: bucket,
-        body: data
+        body: data,
+        headers: headers
       )
 
     request(client, req)
   end
+
+  # def append_object(client, bucket, object, since, data, headers \\ []) do
+  #   req =
+  #     LibOss.Request.new(
+  #       method: :post,
+  #       object: object,
+  #       resource: Path.join(["/", bucket, object]),
+  #       bucket: bucket,
+  #       headers: [{"x-oss-append-position", "#{since}"} | headers],
+  #       body: data
+  #     )
+
+  #   request(client, req)
+  # end
 
   @doc """
   调用CopyObject接口拷贝同一地域下相同或不同存储空间（Bucket）之间的文件（Object）。
@@ -218,16 +239,17 @@ defmodule LibOss do
           Typespecs.bucket(),
           Typespecs.object(),
           Typespecs.bucket(),
-          Typespecs.object()
+          Typespecs.object(),
+          Typespecs.headers()
         ) :: {:ok, any()} | {:error, Error.t()}
-  def copy_object(client, bucket, object, source_bucket, source_object) do
+  def copy_object(client, bucket, object, source_bucket, source_object, headers \\ []) do
     req =
       LibOss.Request.new(
         method: :put,
         object: object,
         resource: Path.join(["/", bucket, object]),
         bucket: bucket,
-        headers: [{"x-oss-copy-source", Path.join(["/", source_bucket, source_object])}]
+        headers: [{"x-oss-copy-source", Path.join(["/", source_bucket, source_object])} | headers]
       )
 
     request(client, req)
@@ -244,7 +266,7 @@ defmodule LibOss do
 
       LibOss.get_object(cli, bucket, "/test/test.txt")
   """
-  @spec get_object(t(), Typespecs.bucket(), String.t(), list()) ::
+  @spec get_object(t(), Typespecs.bucket(), Typespecs.object(), Typespecs.headers()) ::
           {:ok, iodata()} | {:error, Error.t()}
   def get_object(client, bucket, object, req_headers \\ []) do
     req =
@@ -300,8 +322,8 @@ defmodule LibOss do
   @spec init_multi_upload(
           t(),
           Typespecs.bucket(),
-          String.t(),
-          list()
+          Typespecs.object(),
+          Typespecs.headers()
         ) :: {:ok, String.t()} | {:error, Error.t()}
   def init_multi_upload(client, bucket, object, req_headers \\ []) do
     req =
@@ -352,7 +374,7 @@ defmodule LibOss do
   @spec upload_part(
           t(),
           Typespecs.bucket(),
-          String.t(),
+          Typespecs.object(),
           String.t(),
           non_neg_integer(),
           binary()
@@ -383,6 +405,8 @@ defmodule LibOss do
   @doc """
   所有数据Part都上传完成后，您必须调用CompleteMultipartUpload接口来完成整个文件的分片上传。
 
+  Doc: https://help.aliyun.com/document_detail/31995.html
+
   ## Examples
 
       iex> {:ok, etag1} = upload_part(client, bucket, "test.txt", "upload_id", 1, part1)
@@ -394,11 +418,12 @@ defmodule LibOss do
   @spec complete_multipart_upload(
           t(),
           Typespecs.bucket(),
+          Typespecs.object(),
           String.t(),
-          String.t(),
-          [{non_neg_integer(), bitstring()}]
+          [{non_neg_integer(), bitstring()}],
+          Typespecs.headers()
         ) :: {:ok, any()} | {:error, Error.t()}
-  def complete_multipart_upload(client, bucket, object, upload_id, parts) do
+  def complete_multipart_upload(client, bucket, object, upload_id, parts, headers \\ []) do
     # format parts
     body =
       parts
@@ -414,7 +439,8 @@ defmodule LibOss do
         resource: Path.join(["/", bucket, object]),
         sub_resources: [{"uploadId", upload_id}],
         bucket: bucket,
-        body: "<CompleteMultipartUpload>#{body}</CompleteMultipartUpload>"
+        body: "<CompleteMultipartUpload>#{body}</CompleteMultipartUpload>",
+        headers: headers
       )
 
     request(client, req)
@@ -431,11 +457,17 @@ defmodule LibOss do
 
       {:ok, _} = LibOss.put_bucket(cli, your-new-bucket)
   """
-  @spec put_bucket(t(), Typespecs.bucket(), bitstring(), bitstring()) ::
+  @spec put_bucket(t(), Typespecs.bucket(), bitstring(), bitstring(), Typespecs.headers()) ::
           {:ok, any()} | {:error, Error.t()}
-  def put_bucket(client, bucket, storage_class \\ "Standard", data_redundancy_type \\ "LRS")
+  def put_bucket(
+        client,
+        bucket,
+        storage_class \\ "Standard",
+        data_redundancy_type \\ "LRS",
+        headers \\ []
+      )
 
-  def put_bucket(client, bucket, storage_class, data_redundancy_type) do
+  def put_bucket(client, bucket, storage_class, data_redundancy_type, headers) do
     body = """
     <?xml version="1.0" encoding="UTF-8"?>
     <CreateBucketConfiguration>
@@ -448,7 +480,8 @@ defmodule LibOss do
       method: :put,
       bucket: bucket,
       resource: "/" <> bucket <> "/",
-      body: body
+      body: body,
+      headers: headers
     )
     |> then(&request(client, &1))
   end
