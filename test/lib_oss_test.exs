@@ -54,6 +54,18 @@ defmodule LibOssTest do
     assert {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test_for_delete.txt")
   end
 
+  test "append_object", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.append_object(cli, bucket, "/test/test_append.txt", 0, "hello world")
+
+    assert {:ok, _} =
+             LibOss.append_object(cli, bucket, "/test/test_append.txt", 11, "hello world")
+
+    assert {:ok, "hello worldhello world"} =
+             LibOss.get_object(cli, bucket, "/test/test_append.txt")
+
+    LibOss.delete_object(cli, bucket, "/test/test_append.txt")
+  end
+
   defp generate_test_data(length) when is_integer(length) and length > 0 do
     :crypto.strong_rand_bytes(length)
     |> Base.encode64()

@@ -307,6 +307,39 @@ defmodule LibOss do
     request(client, req)
   end
 
+  @doc """
+  调用AppendObject接口用于以追加写的方式上传文件（Object）。
+
+  Doc: https://help.aliyun.com/document_detail/31981.html
+
+  ## Examples
+
+      LibOss.append_object(cli, bucket, "/test/test.txt", 0, "hello ")
+      LibOss.append_object(cli, bucket, "/test/test.txt", 6, "world")
+  """
+  @spec append_object(
+          t(),
+          Typespecs.bucket(),
+          Typespecs.object(),
+          non_neg_integer(),
+          Typespecs.body(),
+          Typespecs.headers()
+        ) :: {:ok, any()} | {:error, Error.t()}
+  def append_object(client, bucket, object, since, data, headers \\ []) do
+    req =
+      LibOss.Request.new(
+        method: :post,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        sub_resources: [{"append", nil}, {"position", "#{since}"}],
+        bucket: bucket,
+        headers: headers,
+        body: data
+      )
+
+    request(client, req)
+  end
+
   #### multipart operations: https://help.aliyun.com/document_detail/155825.html
 
   @doc """
