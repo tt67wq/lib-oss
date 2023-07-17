@@ -308,6 +308,41 @@ defmodule LibOss do
   end
 
   @doc """
+  DeleteMultipleObjects接口用于删除同一个存储空间（Bucket）中的多个文件（Object）。
+
+  Doc: https://help.aliyun.com/document_detail/31983.html
+
+  ## Examples
+
+      LibOss.delete_multiple_objects(cli, bucket, ["/test/test_1.txt", "/test/test_2.txt"]])
+  """
+  @spec delete_multiple_objects(
+          t(),
+          Typespecs.bucket(),
+          [Typespecs.object()]
+        ) :: {:ok, any()} | {:error, Error.t()}
+  def delete_multiple_objects(client, bucket, objects) do
+    body =
+      objects
+      |> Enum.map(fn object ->
+        "<Object><Key>#{object}</Key></Object>"
+      end)
+      |> Enum.join("")
+
+    req =
+      LibOss.Request.new(
+        method: :post,
+        object: "",
+        resource: Path.join(["/", bucket]) <> "/",
+        sub_resources: [{"delete", nil}],
+        bucket: bucket,
+        body: "<Delete><Quiet>true</Quiet>#{body}</Delete>"
+      )
+
+    request(client, req)
+  end
+
+  @doc """
   调用AppendObject接口用于以追加写的方式上传文件（Object）。
 
   Doc: https://help.aliyun.com/document_detail/31981.html

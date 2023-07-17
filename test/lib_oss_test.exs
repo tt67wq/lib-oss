@@ -54,6 +54,26 @@ defmodule LibOssTest do
     assert {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test_for_delete.txt")
   end
 
+  test "delete_multiple_object", %{cli: cli, bucket: bucket} do
+    for i <- 1..10 do
+      assert {:ok, _} = LibOss.put_object(cli, bucket, "/test/test_#{i}.txt", "hello world")
+    end
+
+    assert {:ok, _} =
+             LibOss.delete_multiple_objects(cli, bucket, [
+               "/test/test_1.txt",
+               "/test/test_2.txt",
+               "/test/test_3.txt",
+               "/test/test_4.txt",
+               "/test/test_5.txt",
+               "/test/test_6.txt",
+               "/test/test_7.txt",
+               "/test/test_8.txt",
+               "/test/test_9.txt",
+               "/test/test_10.txt"
+             ])
+  end
+
   test "append_object", %{cli: cli, bucket: bucket} do
     assert {:ok, _} = LibOss.append_object(cli, bucket, "/test/test_append.txt", 0, "hello world")
 
