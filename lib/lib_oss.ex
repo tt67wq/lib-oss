@@ -131,11 +131,11 @@ defmodule LibOss do
       {:ok, "{\"accessid\":\"LTAI1k8kxWG8JpUF\",\"callback\":\"=\",\"dir\":\"/test/test.txt\",\".........ePNPyWQo=\"}"}
   """
   @spec get_token(
-          t(),
-          String.t(),
-          String.t(),
-          non_neg_integer(),
-          String.t()
+          cli :: t(),
+          bucket :: Typespecs.bucket(),
+          object :: Typespecs.object(),
+          expire_sec :: non_neg_integer(),
+          callback :: String.t()
         ) :: {:ok, String.t()}
 
   def get_token(cli, bucket, object, expire_sec \\ 3600, callback \\ "")
@@ -199,6 +199,35 @@ defmodule LibOss do
         resource: Path.join(["/", bucket, object]),
         bucket: bucket,
         body: data
+      )
+
+    request(client, req)
+  end
+
+  @doc """
+  调用CopyObject接口拷贝同一地域下相同或不同存储空间（Bucket）之间的文件（Object）。
+
+  Doc: https://help.aliyun.com/document_detail/31979.html
+
+  ## Examples
+
+      LibOss.copy_object(cli, target_bucket, "object_copy.txt", source_bucket, "object.txt")
+  """
+  @spec copy_object(
+          t(),
+          Typespecs.bucket(),
+          Typespecs.object(),
+          Typespecs.bucket(),
+          Typespecs.object()
+        ) :: {:ok, any()} | {:error, Error.t()}
+  def copy_object(client, bucket, object, source_bucket, source_object) do
+    req =
+      LibOss.Request.new(
+        method: :put,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket,
+        headers: [{"x-oss-copy-source", Path.join(["/", source_bucket, source_object])}]
       )
 
     request(client, req)

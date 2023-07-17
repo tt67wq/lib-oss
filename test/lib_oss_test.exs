@@ -35,6 +35,20 @@ defmodule LibOssTest do
     assert {:ok, "hello world"} = LibOss.get_object(cli, bucket, "/test/test.txt")
   end
 
+  test "copy_object", %{cli: cli, bucket: bucket} do
+    to_bucket = "test-copy-object-#{System.system_time(:second)}"
+    {:ok, _} = LibOss.put_bucket(cli, to_bucket)
+
+    Process.sleep(1000)
+
+    assert {:ok, _} =
+             LibOss.copy_object(cli, to_bucket, "/test/test_copy.txt", bucket, "/test/test.txt")
+
+    assert {:ok, "hello world"} = LibOss.get_object(cli, to_bucket, "/test/test_copy.txt")
+    LibOss.delete_object(cli, to_bucket, "/test/test_copy.txt")
+    LibOss.delete_bucket(cli, to_bucket)
+  end
+
   test "delete_object", %{cli: cli, bucket: bucket} do
     LibOss.put_object(cli, bucket, "/test/test_for_delete.txt", "hello world")
     assert {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test_for_delete.txt")
@@ -85,8 +99,7 @@ defmodule LibOssTest do
       {"3", etag3}
     ]
 
-    assert {:ok, _} =
-             LibOss.complete_multipart_upload(cli, bucket, object, upload_id, parts)
+    assert {:ok, _} = LibOss.complete_multipart_upload(cli, bucket, object, upload_id, parts)
   end
 
   test "put/delete_bucket", %{cli: cli} do
