@@ -375,6 +375,103 @@ defmodule LibOss do
     request(client, req)
   end
 
+  @doc """
+  HeadObject接口用于获取某个文件（Object）的元信息。使用此接口不会返回文件内容。
+
+  Doc: https://help.aliyun.com/document_detail/31984.html
+
+  ## Examples
+
+      iex> LibOss.head_object(cli, bucket, "/test/test.txt")
+      {:ok,
+       %{
+         "accept-ranges" => "bytes",
+         "connection" => "keep-alive",
+         "content-length" => "11",
+         "content-md5" => "XrY7u+Ae7tCTyyK7j1rNww==",
+         "content-type" => "text/plain",
+         "date" => "Tue, 18 Jul 2023 06:27:36 GMT",
+         "etag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
+         "last-modified" => "Tue, 18 Jul 2023 06:27:33 GMT",
+         "server" => "AliyunOSS",
+         "x-oss-hash-crc64ecma" => "5981764153023615706",
+         "x-oss-object-type" => "Normal",
+         "x-oss-request-id" => "64B630D8E0DCB93335001974",
+         "x-oss-server-time" => "1",
+         "x-oss-storage-class" => "Standard"
+       }}
+  """
+  @spec head_object(t(), Typespecs.bucket(), Typespecs.object(), Typespecs.headers()) ::
+          {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+  def head_object(client, bucket, object, headers \\ []) do
+    req =
+      LibOss.Request.new(
+        method: :head,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket,
+        headers: headers
+      )
+
+    request(client, req)
+    |> case do
+      {:ok, %{headers: headers}} ->
+        {:ok,
+         headers
+         |> Enum.into(%{})}
+
+      err ->
+        err
+    end
+  end
+
+  @doc """
+  function description
+
+  ## Examples
+
+      iex> LibOss.get_object_meta(cli, bucket, "/test/test.txt")
+      {:ok,
+       %{
+         "accept-ranges" => "bytes",
+         "connection" => "keep-alive",
+         "content-length" => "11",
+         "content-md5" => "XrY7u+Ae7tCTyyK7j1rNww==",
+         "content-type" => "text/plain",
+         "date" => "Tue, 18 Jul 2023 06:29:10 GMT",
+         "etag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
+         "last-modified" => "Tue, 18 Jul 2023 06:27:33 GMT",
+         "server" => "AliyunOSS",
+         "x-oss-hash-crc64ecma" => "5981764153023615706",
+         "x-oss-object-type" => "Normal",
+         "x-oss-request-id" => "64B631365A8AEE32306C9D64",
+         "x-oss-server-time" => "2",
+         "x-oss-storage-class" => "Standard"
+       }}
+  """
+  @spec get_object_meta(t(), Typespecs.bucket(), Typespecs.object()) ::
+          {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+  def get_object_meta(client, bucket, object) do
+    req =
+      LibOss.Request.new(
+        method: :head,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket
+      )
+
+    request(client, req)
+    |> case do
+      {:ok, %{headers: headers}} ->
+        {:ok,
+         headers
+         |> Enum.into(%{})}
+
+      err ->
+        err
+    end
+  end
+
   #### multipart operations: https://help.aliyun.com/document_detail/155825.html
 
   @doc """
