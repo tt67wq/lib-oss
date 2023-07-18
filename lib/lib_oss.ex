@@ -111,7 +111,8 @@ defmodule LibOss do
       path: Path.join(["/", object]),
       headers: req.headers,
       body: req.body,
-      params: req.params
+      params: req.params,
+      opts: [debug: req.debug]
     ]
     |> LibOss.Http.Request.new()
     |> then(&LibOss.Http.do_request(client.http_impl, &1))
@@ -426,7 +427,9 @@ defmodule LibOss do
   end
 
   @doc """
-  function description
+  调用GetObjectMeta接口获取一个文件（Object）的元数据信息，包括该Object的ETag、Size、LastModified信息，并且不返回该Object的内容。
+
+  Doc: https://help.aliyun.com/document_detail/31985.html
 
   ## Examples
 
@@ -565,6 +568,104 @@ defmodule LibOss do
               nil -> Error.new("etag not found")
             end).()
     end
+  end
+
+  @doc """
+  调用ListMultipartUploads接口列举所有执行中的Multipart Upload事件，即已经初始化但还未完成（Complete）或者还未中止（Abort）的Multipart Upload事件。
+
+  Doc: https://help.aliyun.com/document_detail/31997.html
+
+  ## Examples
+
+      iex> list_multipart_uploads(client, bucket, %{"delimiter"=>"/", "max-uploads" => 10, "prefix"=>"test/"})
+      {:ok,
+       [
+         %{
+           "ETag" => "\"1334928900AEB317206CC7EB950540EF-3\"",
+           "Key" => "test/multi-test.txt",
+           "LastModified" => "2023-07-18T11:16:45.000Z",
+           "Owner" => %{
+             "DisplayName" => "1074124462684153",
+             "ID" => "1074124462684153"
+           },
+           "Size" => "409608",
+           "StorageClass" => "Standard",
+           "Type" => "Multipart"
+         },
+         %{
+           "ETag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
+           "Key" => "test/test.txt",
+           "LastModified" => "2023-07-18T11:19:19.000Z",
+           "Owner" => %{
+             "DisplayName" => "1074124462684153",
+             "ID" => "1074124462684153"
+           },
+           "Size" => "11",
+           "StorageClass" => "Standard",
+           "Type" => "Normal"
+         }
+       ]}
+  """
+  @spec list_multipart_uploads(
+          t(),
+          Typespecs.bucket(),
+          Typespecs.params()
+        ) :: {:ok, [Typespecs.string_dict()]} | {:error, Error.t()}
+  def list_multipart_uploads(client, bucket, query_params) do
+    req =
+      LibOss.Request.new(
+        method: :get,
+        object: "?uploads",
+        resource: Path.join(["/", bucket]) <> "/",
+        bucket: bucket,
+        params: query_params
+      )
+
+    request(client, req)
+    |> case do
+      {:ok, %{body: body}} ->
+        body
+        |> XmlToMap.naive_map()
+        |> case do
+          %{"ListBucketResult" => %{"Contents" => ret}} ->
+            {:ok, ret}
+
+          _ ->
+            Error.new("invalid response body: #{inspect(body)}")
+        end
+
+      err ->
+        err
+    end
+    |> LibOss.Utils.debug()
+  end
+
+  @doc """
+  AbortMultipartUpload接口用于取消MultipartUpload事件并删除对应的Part数据。
+
+  Doc: https://help.aliyun.com/document_detail/31996.html
+
+  ## Examples
+
+      {:ok, return_value} = function_name()
+  """
+  @spec abort_multipart_upload(
+          t(),
+          Typespecs.bucket(),
+          Typespecs.object(),
+          String.t()
+        ) :: {:ok, any()} | {:error, Error.t()}
+  def abort_multipart_upload(client, bucket, object, upload_id) do
+    req =
+      LibOss.Request.new(
+        method: :delete,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        sub_resources: [{"uploadId", upload_id}],
+        bucket: bucket
+      )
+
+    request(client, req)
   end
 
   @doc """

@@ -139,7 +139,20 @@ defmodule LibOssTest do
       {"3", etag3}
     ]
 
+    assert {:ok, _} =
+             LibOss.list_multipart_uploads(cli, bucket, %{
+               "delimiter" => "/",
+               "max-uploads" => "10",
+               "prefix" => "test/"
+             })
+
     assert {:ok, _} = LibOss.complete_multipart_upload(cli, bucket, object, upload_id, parts)
+  end
+
+  test "abort_multipart_upload", %{cli: cli, bucket: bucket} do
+    object = "/test/multi-test.txt"
+    assert {:ok, upload_id} = LibOss.init_multi_upload(cli, bucket, object)
+    assert {:ok, _} = LibOss.abort_multipart_upload(cli, bucket, object, upload_id)
   end
 
   test "put/delete_bucket", %{cli: cli} do

@@ -13,7 +13,10 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
   - [x] 获取文件元信息
 
 - MultipartUpload:
-  - [x] 分片上传
+  - [x] 分片上传发起
+  - [x] 分片上传完成
+  - [x] 分片上传取消
+  - [x] 分片上传列表
  
 - Bucket:
   - [x] 创建bucket

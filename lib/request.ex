@@ -50,6 +50,11 @@ defmodule LibOss.Request do
       type: :integer,
       doc: "oss expires",
       default: 0
+    ],
+    debug: [
+      type: :boolean,
+      doc: "debug",
+      default: false
     ]
   ]
 
@@ -75,7 +80,8 @@ defmodule LibOss.Request do
           params: Typespecs.params(),
           body: Typespecs.body(),
           headers: Typespecs.headers(),
-          expires: non_neg_integer()
+          expires: non_neg_integer(),
+          debug: boolean()
         }
 
   defstruct [
@@ -87,7 +93,8 @@ defmodule LibOss.Request do
     :params,
     :body,
     :headers,
-    :expires
+    :expires,
+    :debug
   ]
 
   @doc """
@@ -139,7 +146,11 @@ defmodule LibOss.Request do
   defp signature(request, client) do
     request
     |> string_to_sign()
-    # |> LibOss.Utils.debug()
+    |> tap(fn x ->
+      if request.debug do
+        IO.inspect(x, label: "string_to_sign")
+      end
+    end)
     |> LibOss.Utils.do_sign(client.access_key_secret)
   end
 

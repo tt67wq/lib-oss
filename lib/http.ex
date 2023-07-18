@@ -207,6 +207,7 @@ defmodule LibOss.Http.Default do
   @impl Http
   def do_request(http, req) do
     with opts <- opts(req.opts),
+         {debug?, opts} <- Keyword.pop(opts, :debug),
          finch_req <-
            Finch.build(
              req.method,
@@ -215,15 +216,17 @@ defmodule LibOss.Http.Default do
              req.body,
              opts
            ) do
-      # Logger.debug(%{
-      #   "method" => req.method,
-      #   "url" => Http.Request.url(req) |> URI.to_string(),
-      #   "params" => req.params,
-      #   "headers" => req.headers,
-      #   "body" => req.body,
-      #   "opts" => opts,
-      #   "req" => finch_req
-      # })
+      if debug? do
+        Logger.debug(%{
+          "method" => req.method,
+          "url" => Http.Request.url(req) |> URI.to_string(),
+          "params" => req.params,
+          "headers" => req.headers,
+          "body" => req.body,
+          "opts" => opts,
+          "req" => finch_req
+        })
+      end
 
       finch_req
       |> Finch.request(http.name)
