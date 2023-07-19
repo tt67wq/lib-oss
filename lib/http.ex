@@ -239,7 +239,7 @@ defmodule LibOss.Http.Default do
           {:error, Error.new("status: #{status}, body: #{body}")}
 
         {:error, exception} ->
-          raise exception
+          Logger.error(%{"request" => req, "exception" => exception})
           {:error, Error.new(inspect(exception))}
       end
     end
