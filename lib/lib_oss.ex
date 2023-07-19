@@ -637,7 +637,6 @@ defmodule LibOss do
       err ->
         err
     end
-    |> LibOss.Utils.debug()
   end
 
   @doc """
@@ -710,6 +709,82 @@ defmodule LibOss do
       )
 
     request(client, req)
+  end
+
+  @doc """
+  ListParts接口用于列举指定Upload ID所属的所有已经上传成功Part。
+
+  Doc: https://help.aliyun.com/document_detail/31998.html
+
+  ## Examples
+
+      {:ok, return_value} = function_name()
+      iex> LibOss.list_parts(cli, bucket, "test.txt", "upload_id")
+      {:ok,
+       %{
+        "ListPartsResult" => %{
+          "Bucket" => "hope-data",
+          "IsTruncated" => "false",
+          "Key" => "test/multi-test.txt",
+          "MaxParts" => "1000",
+          "NextPartNumberMarker" => "3",
+          "Part" => [
+            %{
+              "ETag" => "\"3170FC594DACE56C506E0196B5DEA1D1\"",
+              "HashCrc64ecma" => "10873275732915280589",
+              "LastModified" => "2023-07-19T02:58:16.000Z",
+              "PartNumber" => "1",
+              "Size" => "136536"
+            },
+            %{
+              "ETag" => "\"5539D60A05FD504B8210A662D7D15C1E\"",
+              "HashCrc64ecma" => "4592881501542342075",
+              "LastModified" => "2023-07-19T02:58:17.000Z",
+              "PartNumber" => "2",
+              "Size" => "136536"
+            },
+            %{
+              "ETag" => "\"5C7D509F5744115EE3B2D55F4893FE3F\"",
+              "HashCrc64ecma" => "9048307046109329978",
+              "LastModified" => "2023-07-19T02:58:17.000Z",
+              "PartNumber" => "3",
+              "Size" => "136536"
+            }
+          ],
+          "PartNumberMarker" => "0",
+          "StorageClass" => "Standard",
+          "UploadId" => "39663F02E9384C87BFC9E9B0E8B1100E"
+        }
+      }}
+  """
+  @spec list_parts(
+          t(),
+          Typespecs.bucket(),
+          Typespecs.object(),
+          String.t(),
+          Typespecs.params()
+        ) :: {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+  def list_parts(client, bucket, object, upload_id, query_params \\ %{}) do
+    req =
+      LibOss.Request.new(
+        method: :get,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        sub_resources: [{"uploadId", upload_id}],
+        bucket: bucket,
+        params: query_params
+      )
+
+    request(client, req)
+    |> case do
+      {:ok, %{body: body}} ->
+        {:ok,
+         body
+         |> XmlToMap.naive_map()}
+
+      err ->
+        err
+    end
   end
 
   #### bucket operations: https://help.aliyun.com/document_detail/31959.html

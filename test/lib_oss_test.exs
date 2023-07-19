@@ -146,6 +146,8 @@ defmodule LibOssTest do
                "prefix" => "test/"
              })
 
+    assert {:ok, _} = LibOss.list_parts(cli, bucket, object, upload_id)
+
     assert {:ok, _} = LibOss.complete_multipart_upload(cli, bucket, object, upload_id, parts)
   end
 
