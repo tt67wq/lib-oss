@@ -1,4 +1,4 @@
-defmodule LibOssTest do
+defmodule LibOss.ObjectTest do
   use ExUnit.Case
 
   setup_all do
@@ -155,24 +155,5 @@ defmodule LibOssTest do
     object = "/test/multi-test.txt"
     assert {:ok, upload_id} = LibOss.init_multi_upload(cli, bucket, object)
     assert {:ok, _} = LibOss.abort_multipart_upload(cli, bucket, object, upload_id)
-  end
-
-  test "put/delete_bucket", %{cli: cli} do
-    bucket = "test-bucket-#{System.system_time(:second)}"
-    assert {:ok, _} = LibOss.put_bucket(cli, bucket)
-    assert {:ok, _} = LibOss.delete_bucket(cli, bucket)
-  end
-
-  test "get_bucket", %{cli: cli, bucket: bucket} do
-    for i <- 1..10 do
-      assert {:ok, _} = LibOss.put_object(cli, bucket, "/test/test_#{i}.txt", "hello world")
-    end
-
-    assert {:ok, _} = LibOss.get_bucket(cli, bucket, %{"prefix" => "test/test"})
-
-    # delete
-    for i <- 1..10 do
-      assert {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test_#{i}.txt")
-    end
   end
 end

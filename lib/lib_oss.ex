@@ -883,7 +883,7 @@ defmodule LibOss do
        }
       ]}
   """
-  @spec get_bucket(t(), Typespecs.bucket(), %{String.t() => String.t()}) ::
+  @spec get_bucket(t(), Typespecs.bucket(), Typespecs.params()) ::
           {:ok, [any()]} | {:error, Error.t()}
   def get_bucket(client, bucket, query_params) do
     LibOss.Request.new(
@@ -901,6 +901,69 @@ defmodule LibOss do
           %{"ListBucketResult" => %{"Contents" => ret}} -> {:ok, ret}
           _ -> Error.new("invalid response body: #{inspect(body)}")
         end
+
+      err ->
+        err
+    end
+  end
+
+  @doc """
+  ListObjectsV2（GetBucketV2）接口用于列举存储空间（Bucket）中所有文件（Object）的信息。
+
+  Doc: https://help.aliyun.com/document_detail/187544.html
+
+  ## Examples
+
+      iex> LibOss.list_object_v2(cli, bucket, %{"prefix" => "test/test"})
+      {:ok,
+       [
+         %{
+           "ETag" => "\"A5D2B2E40EF7EBA1C788697D31C27A78-3\"",
+           "Key" => "test/test.txt",
+           "LastModified" => "2023-07-09T14:41:08.000Z",
+           "Owner" => %{
+             "DisplayName" => "1074124462684153",
+             "ID" => "1074124462684153"
+           },
+           "Size" => "409608",
+           "StorageClass" => "Standard",
+           "Type" => "Multipart"
+         },
+         %{
+           "ETag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
+           "Key" => "test/test_1.txt",
+           "LastModified" => "2023-07-09T14:41:08.000Z",
+           "Owner" => %{
+             "DisplayName" => "1074124462684153",
+             "ID" => "1074124462684153"
+           },
+           "Size" => "11",
+           "StorageClass" => "Standard",
+           "Type" => "Normal"
+         }
+       ]}
+  """
+  @spec list_object_v2(t(), Typespecs.bucket(), Typespecs.params()) ::
+          {:ok, [any()]} | {:error, Error.t()}
+  def list_object_v2(client, bucket, query_params) do
+    LibOss.Request.new(
+      method: :get,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      params: Map.put(query_params, "list-type", "2")
+    )
+    |> then(&request(client, &1))
+    |> case do
+      {:ok, %{body: body}} ->
+        ret =
+          body
+          |> XmlToMap.naive_map()
+          |> case do
+            %{"ListBucketResult" => %{"Contents" => ret}} -> {:ok, ret}
+            _ -> Error.new("invalid response body: #{inspect(body)}")
+          end
+
+        {:ok, ret}
 
       err ->
         err

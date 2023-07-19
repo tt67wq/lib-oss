@@ -7,7 +7,7 @@ defmodule LibOss.Typespecs do
   @type method :: :get | :post | :head | :patch | :delete | :options | :put
   @type headers :: [{String.t(), String.t()}]
   @type body :: iodata() | nil
-  @type params :: %{String.t() => binary()} | nil
+  @type params :: %{String.t() => binary()}
   @type http_status :: non_neg_integer()
   @type on_start ::
           {:ok, pid()}
