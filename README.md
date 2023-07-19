@@ -23,8 +23,8 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
   - [x] 创建bucket
   - [x] 删除bucket
   - [x] 获取bucket中文件
-  - [ ] 获取bucket中文件V2
-  - [ ] 查看bucket的相关信息
+  - [x] 获取bucket中文件V2
+  - [x] 查看bucket的相关信息
   - [ ] 获取bucket存储容量以及文件（Object）数量
 
 

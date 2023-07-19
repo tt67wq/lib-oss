@@ -969,4 +969,60 @@ defmodule LibOss do
         err
     end
   end
+
+  @doc """
+  调用GetBucketInfo接口查看存储空间（Bucket）的相关信息。
+
+  Doc: https://help.aliyun.com/document_detail/31968.html
+
+  ## Examples
+
+      iex> LibOss.get_bucket_info(cli, bucket)
+      {:ok,
+       %{
+         "Bucket" => %{
+           "AccessControlList" => %{"Grant" => "public-read"},
+           "AccessMonitor" => "Disabled",
+           "BucketPolicy" => %{"LogBucket" => nil, "LogPrefix" => nil},
+           "Comment" => nil,
+           "CreationDate" => "2022-08-02T14:59:56.000Z",
+           "CrossRegionReplication" => "Disabled",
+           "DataRedundancyType" => "LRS",
+           "ExtranetEndpoint" => "oss-cn-shenzhen.aliyuncs.com",
+           "IntranetEndpoint" => "oss-cn-shenzhen-internal.aliyuncs.com",
+           "Location" => "oss-cn-shenzhen",
+           "Name" => "xxxx-data",
+           "Owner" => %{
+             "DisplayName" => "1074124462684153",
+             "ID" => "1074124462684153"
+           },
+           "ResourceGroupId" => "rg-acfmv47nudzpp6i",
+           "ServerSideEncryptionRule" => %{"SSEAlgorithm" => "None"},
+           "StorageClass" => "Standard",
+           "TransferAcceleration" => "Enabled"
+         }
+       }}
+  """
+  @spec get_bucket_info(t(), Typespecs.bucket()) :: {:ok, any()} | {:error, Error.t()}
+  def get_bucket_info(client, bucket) do
+    LibOss.Request.new(
+      method: :get,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      sub_resources: [{"bucketInfo", nil}]
+    )
+    |> then(&request(client, &1))
+    |> case do
+      {:ok, %{body: body}} ->
+        body
+        |> XmlToMap.naive_map()
+        |> case do
+          %{"BucketInfo" => ret} -> {:ok, ret}
+          _ -> Error.new("invalid response body: #{inspect(body)}")
+        end
+
+      err ->
+        err
+    end
+  end
 end

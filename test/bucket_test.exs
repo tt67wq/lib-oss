@@ -42,4 +42,8 @@ defmodule LibOss.BucketTest do
       assert {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test_#{i}.txt")
     end
   end
+
+  test "get_bucket_info", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.get_bucket_info(cli, bucket)
+  end
 end
