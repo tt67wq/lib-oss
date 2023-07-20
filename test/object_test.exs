@@ -156,4 +156,9 @@ defmodule LibOss.ObjectTest do
     assert {:ok, upload_id} = LibOss.init_multi_upload(cli, bucket, object)
     assert {:ok, _} = LibOss.abort_multipart_upload(cli, bucket, object, upload_id)
   end
+
+  test "put/get_object_acl", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.put_object_acl(cli, bucket, "/test/test.txt", "public-read")
+    assert {:ok, _} = LibOss.get_object_acl(cli, bucket, "/test/test.txt")
+  end
 end

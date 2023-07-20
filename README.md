@@ -13,7 +13,6 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
     - [x] 追加写文件
     - [x] 获取文件元信息
     - [ ] 通过HTML表单上传的方式将文件
-    - [ ] 回调实现
     - [ ] 归档解冻
     - [ ] 执行SQL语句
 
@@ -24,7 +23,9 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
     - [x] 分片上传列表
     - [x] 列举指定uploadid已经成功上传的part
 
-  - [ ] 权限控制ACL
+  - [x] 权限控制ACL
+    - [x] 设置文件ACL
+    - [x] 获取文件ACL
   - [ ] 软连接
   - [ ] 标签
  

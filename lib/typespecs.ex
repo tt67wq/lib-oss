@@ -17,4 +17,5 @@ defmodule LibOss.Typespecs do
   @type string_dict :: %{bitstring() => any()}
   @type bucket :: bitstring()
   @type object :: bitstring()
+  @type acl :: bitstring()
 end

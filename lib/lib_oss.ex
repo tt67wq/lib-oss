@@ -212,20 +212,6 @@ defmodule LibOss do
     request(client, req)
   end
 
-  # def append_object(client, bucket, object, since, data, headers \\ []) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :post,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       bucket: bucket,
-  #       headers: [{"x-oss-append-position", "#{since}"} | headers],
-  #       body: data
-  #     )
-
-  #   request(client, req)
-  # end
-
   @doc """
   调用CopyObject接口拷贝同一地域下相同或不同存储空间（Bucket）之间的文件（Object）。
 
@@ -350,8 +336,8 @@ defmodule LibOss do
 
   ## Examples
 
-      LibOss.append_object(cli, bucket, "/test/test.txt", 0, "hello ")
-      LibOss.append_object(cli, bucket, "/test/test.txt", 6, "world")
+      iex> LibOss.append_object(cli, bucket, "/test/test.txt", 0, "hello ")
+      iex> LibOss.append_object(cli, bucket, "/test/test.txt", 6, "world")
   """
   @spec append_object(
           t(),
@@ -469,6 +455,79 @@ defmodule LibOss do
         {:ok,
          headers
          |> Enum.into(%{})}
+
+      err ->
+        err
+    end
+  end
+
+  @doc """
+  调用PutObjectACL接口修改文件（Object）的访问权限（ACL）
+
+  Doc: https://help.aliyun.com/document_detail/31986.html
+
+  ## Examples
+
+      iex> LibOss.put_object_acl(cli, bucket, "/test/test.txt", "public-read")
+  """
+  @spec put_object_acl(
+          t(),
+          Typespecs.bucket(),
+          Typespecs.object(),
+          Typespecs.acl()
+        ) :: {:ok, any()} | {:error, Error.t()}
+  def put_object_acl(client, bucket, object, acl) do
+    if acl not in ["private", "public-read", "public-read-write", "default"] do
+      raise Error.new("invalid acl: #{acl}")
+    end
+
+    req =
+      LibOss.Request.new(
+        method: :put,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket,
+        sub_resources: [{"acl", nil}],
+        headers: [{"x-oss-object-acl", acl}]
+      )
+
+    request(client, req)
+  end
+
+  @doc """
+  调用GetObjectACL接口获取存储空间（Bucket）下某个文件（Object）的访问权限（ACL）。
+
+  Doc: https://help.aliyun.com/document_detail/31987.html
+
+  ## Examples
+
+      iex> LibOss.get_object_acl(cli, bucket, "/test/test.txt")
+      {:ok, "public-read"}
+  """
+  @spec get_object_acl(t(), Typespecs.bucket(), Typespecs.object()) ::
+          {:ok, Typespecs.acl()} | {:error, Error.t()}
+  def get_object_acl(client, bucket, object) do
+    req =
+      LibOss.Request.new(
+        method: :get,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket,
+        sub_resources: [{"acl", nil}]
+      )
+
+    request(client, req)
+    |> case do
+      {:ok, %{body: body}} ->
+        body
+        |> XmlToMap.naive_map()
+        |> case do
+          %{"AccessControlPolicy" => %{"AccessControlList" => %{"Grant" => grant}}} ->
+            {:ok, grant}
+
+          _ ->
+            Error.new("invalid response body: #{inspect(body)}")
+        end
 
       err ->
         err
