@@ -24,7 +24,7 @@ defmodule LibOss.MixProject do
       {:nimble_options, "~> 0.5"},
       {:mime, "~> 2.0"},
       {:jason, "~> 1.4"},
-      {:elixir_xml_to_map, "~> 2.0", optional: true},
+      {:elixir_xml_to_map, "~> 2.0"},
       {:finch, "~> 0.16", test: true},
       {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.29", only: :dev, runtime: false}
