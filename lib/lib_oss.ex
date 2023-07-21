@@ -534,6 +534,71 @@ defmodule LibOss do
     end
   end
 
+  @doc """
+  调用PutSymlink接口用于为OSS的目标文件（TargetObject）创建软链接（Symlink）
+
+  Doc: https://help.aliyun.com/document_detail/45126.html
+
+  ## Examples
+
+      iex> LibOss.put_symlink(cli, bucket, "/test/test.txt", "/test/test_symlink.txt")
+  """
+  @spec put_symlink(
+          t(),
+          Typespecs.bucket(),
+          Typespecs.object(),
+          Typespecs.object(),
+          Typespecs.headers()
+        ) :: {:ok, any()} | {:error, Error.t()}
+  def put_symlink(client, bucket, object, target_object, headers \\ []) do
+    req =
+      LibOss.Request.new(
+        method: :put,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        sub_resources: [{"symlink", nil}],
+        bucket: bucket,
+        headers: [{"x-oss-symlink-target", target_object} | headers]
+      )
+
+    request(client, req)
+  end
+
+  @doc """
+  调用GetSymlink接口获取软链接。
+
+  ## Examples
+
+      iex> LibOss.get_symlink(cli, bucket, "/test/test.txt")
+      {:ok, "/test/test_symlink.txt"}
+  """
+  @spec get_symlink(t(), Typespecs.bucket(), Typespecs.object()) ::
+          {:ok, bitstring()} | {:error, Error.t()}
+  def get_symlink(client, bucket, object) do
+    req =
+      LibOss.Request.new(
+        method: :get,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket,
+        sub_resources: [{"symlink", nil}]
+      )
+
+    request(client, req)
+    |> case do
+      {:ok, %{headers: headers}} ->
+        headers
+        |> Enum.find(fn {k, _} -> k == "x-oss-symlink-target" end)
+        |> (fn
+              {_, v} -> {:ok, URI.decode(v)}
+              nil -> Error.new("x-oss-symlink-target not found")
+            end).()
+
+      err ->
+        err
+    end
+  end
+
   #### multipart operations: https://help.aliyun.com/document_detail/155825.html
 
   @doc """
