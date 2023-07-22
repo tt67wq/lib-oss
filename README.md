@@ -2,7 +2,7 @@
 
 LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/31815.html)的SDK，目前支持的功能有：
 
-- Object:
+- [ ] Object:
   - [ ] 基础操作:
     - [x] 上传文件
     - [x] 获取文件
@@ -34,7 +34,7 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
     - [x] 获取标签
     - [x] 删除标签
  
-- Bucket:
+- [ ] Bucket:
   - [ ] 基础操作:
     - [x] 创建bucket
     - [x] 删除bucket
@@ -66,6 +66,8 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
   - [ ] 自定义域名
   - [ ] 图片样式
   - [ ] 归档直读
+
+- [ ] LiveChannel
 
 
 ## 使用方法
