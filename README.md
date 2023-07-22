@@ -29,7 +29,10 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
   - [x] 软连接
     - [x] 创建软连接
     - [x] 获取软连接
-  - [ ] 标签
+  - [x] 标签
+    - [x] 设置标签
+    - [x] 获取标签
+    - [x] 删除标签
  
 - Bucket:
   - [ ] 基础操作:

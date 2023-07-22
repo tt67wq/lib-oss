@@ -567,6 +567,8 @@ defmodule LibOss do
   @doc """
   调用GetSymlink接口获取软链接。
 
+  Doc: https://help.aliyun.com/document_detail/45146.html
+
   ## Examples
 
       iex> LibOss.get_symlink(cli, bucket, "/test/test.txt")
@@ -597,6 +599,107 @@ defmodule LibOss do
       err ->
         err
     end
+  end
+
+  @doc """
+  调用PutObjectTagging接口设置或更新对象（Object）的标签（Tagging）信息。
+
+  Doc: https://help.aliyun.com/document_detail/114855.html
+
+  ## Examples
+
+      iex> LibOss.put_object_tagging(cli, bucket, "/test/test.txt", %{"key1" => "value1", "key2" => "value2"})
+  """
+  @spec put_object_tagging(
+          t(),
+          Typespecs.bucket(),
+          Typespecs.object(),
+          Typespecs.string_dict()
+        ) :: {:ok, any()} | {:error, Error.t()}
+  def put_object_tagging(client, bucket, object, tags) do
+    tagging =
+      tags
+      |> Enum.map(fn {k, v} -> "<Tag><Key>#{k}</Key><Value>#{v}</Value></Tag>" end)
+
+    req =
+      LibOss.Request.new(
+        method: :put,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        sub_resources: [{"tagging", nil}],
+        bucket: bucket,
+        body: "<Tagging><TagSet>#{tagging}</TagSet></Tagging>"
+      )
+
+    request(client, req)
+  end
+
+  @doc """
+  调用GetObjectTagging接口获取对象（Object）的标签（Tagging）信息。
+
+  Doc: https://help.aliyun.com/document_detail/114878.html
+
+  ## Examples
+
+      iex> LibOss.get_object_tagging(cli, bucket, "/test/test.txt")
+      {:ok,
+       [
+         %{"Key" => "key1", "Value" => "value1"},
+         %{"Key" => "key2", "Value" => "value2"}
+       ]}
+  """
+  @spec get_object_tagging(t(), Typespecs.bucket(), Typespecs.object()) ::
+          {:ok, [Typespecs.string_dict()]} | {:error, Error.t()}
+  def get_object_tagging(client, bucket, object) do
+    req =
+      LibOss.Request.new(
+        method: :get,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket,
+        sub_resources: [{"tagging", nil}]
+      )
+
+    request(client, req)
+    |> case do
+      {:ok, %{body: body}} ->
+        body
+        |> XmlToMap.naive_map()
+        |> case do
+          %{"Tagging" => %{"TagSet" => %{"Tag" => tags}}} ->
+            {:ok, tags}
+
+          _ ->
+            Error.new("invalid response body: #{inspect(body)}")
+        end
+
+      err ->
+        err
+    end
+  end
+
+  @doc """
+  删除Object当前版本的标签信息。
+
+  Doc: https://help.aliyun.com/document_detail/114879.html
+
+  ## Examples
+
+      iex> LibOss.delete_object_tagging(cli, bucket, "/test/test.txt")
+  """
+  @spec delete_object_tagging(t(), Typespecs.bucket(), Typespecs.object()) ::
+          {:ok, any()} | {:error, Error.t()}
+  def delete_object_tagging(client, bucket, object) do
+    req =
+      LibOss.Request.new(
+        method: :delete,
+        object: object,
+        resource: Path.join(["/", bucket, object]),
+        bucket: bucket,
+        sub_resources: [{"tagging", nil}]
+      )
+
+    request(client, req)
   end
 
   #### multipart operations: https://help.aliyun.com/document_detail/155825.html

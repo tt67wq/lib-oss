@@ -168,4 +168,20 @@ defmodule LibOss.ObjectTest do
     assert {:ok, _} = LibOss.put_symlink(cli, bucket, "/test/test.txt", "/test/test_symlink.txt")
     assert {:ok, _} = LibOss.get_symlink(cli, bucket, "/test/test.txt")
   end
+
+  test "tagging", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} =
+             LibOss.put_object_tagging(cli, bucket, "/test/test.txt", %{
+               "key1" => "value1",
+               "key2" => "value2"
+             })
+
+    assert {:ok,
+            [
+              %{"Key" => "key1", "Value" => "value1"},
+              %{"Key" => "key2", "Value" => "value2"}
+            ]} = LibOss.get_object_tagging(cli, bucket, "/test/test.txt")
+
+    assert {:ok, _} = LibOss.delete_object_tagging(cli, bucket, "/test/test.txt")
+  end
 end
