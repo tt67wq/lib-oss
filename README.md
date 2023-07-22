@@ -65,33 +65,30 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
 
 ## 使用方法
 
-### 在mix.exs中添加依赖
-
 ```elixir
-# 尚未上传至hex.pm，暂时使用github地址
-def deps do
+Mix.install([
+  # 尚未上传至hex.pm，暂时使用github地址
+  {:lib_oss, github: "tt67wq/lib-oss", branch: "master"}
+])
+
+# 创建一个oss客户端
+cli =
+  LibOss.new(
+    endpoint: "oss-cn-somewhere.aliyuncs.com",
+    access_key_id: "your access key id",
+    access_key_secret: "your access key secret"
+  )
+
+# 在superivsor中启动
+Supervisor.start_link(
   [
-    {:lib_oss, github: "tt67wq/lib-oss", branch: "master"}
-  ]
-end
-```
-
-
-### 创建Oss客户端
-
-```elixir
-client = LibOss.new(
-  endpoint: "your oss endpoint",
-  access_key_id: "your access key id",
-  access_key_secret: "your access key secret",
+    {LibOss, client: cli}
+  ],
+  strategy: :one_for_one
 )
-```
 
-### 将LibOss添加至Supervisor
-
-```elixir
-children = [
-  {LibOss, client: client}
-]
+# 上传文件
+{:ok, content} = File.read("./test.txt")
+LibOss.put_object(cli, "hope-data", "/test/test.txt", content)
 ```
 
