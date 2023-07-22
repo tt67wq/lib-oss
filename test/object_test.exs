@@ -45,6 +45,8 @@ defmodule LibOss.ObjectTest do
              LibOss.copy_object(cli, to_bucket, "/test/test_copy.txt", bucket, "/test/test.txt")
 
     assert {:ok, "hello world"} = LibOss.get_object(cli, to_bucket, "/test/test_copy.txt")
+
+    Process.sleep(1000)
     LibOss.delete_object(cli, to_bucket, "/test/test_copy.txt")
     LibOss.delete_bucket(cli, to_bucket)
   end
@@ -160,5 +162,10 @@ defmodule LibOss.ObjectTest do
   test "put/get_object_acl", %{cli: cli, bucket: bucket} do
     assert {:ok, _} = LibOss.put_object_acl(cli, bucket, "/test/test.txt", "public-read")
     assert {:ok, _} = LibOss.get_object_acl(cli, bucket, "/test/test.txt")
+  end
+
+  test "put/get_symlink", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.put_symlink(cli, bucket, "/test/test.txt", "/test/test_symlink.txt")
+    assert {:ok, _} = LibOss.get_symlink(cli, bucket, "/test/test.txt")
   end
 end

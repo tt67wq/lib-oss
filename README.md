@@ -26,7 +26,9 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
   - [x] 权限控制ACL
     - [x] 设置文件ACL
     - [x] 获取文件ACL
-  - [ ] 软连接
+  - [x] 软连接
+    - [x] 创建软连接
+    - [x] 获取软连接
   - [ ] 标签
  
 - Bucket:
