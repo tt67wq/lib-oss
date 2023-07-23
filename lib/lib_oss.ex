@@ -1279,4 +1279,64 @@ defmodule LibOss do
         err
     end
   end
+
+  @doc """
+  调用GetBucketStat接口获取指定存储空间（Bucket）的存储容量以及文件（Object）数量。
+
+  Doc: https://help.aliyun.com/document_detail/426056.html
+
+  ## Examples
+
+      iex> LibOss.get_bucket_stat(cli, bucket)
+      {:ok, {:ok,
+       %{
+         "ArchiveObjectCount" => "0",
+         "ArchiveRealStorage" => "0",
+         "ArchiveStorage" => "0",
+         "ColdArchiveObjectCount" => "0",
+         "ColdArchiveRealStorage" => "0",
+         "ColdArchiveStorage" => "0",
+         "DeepColdArchiveObjectCount" => "0",
+         "DeepColdArchiveRealStorage" => "0",
+         "DeepColdArchiveStorage" => "0",
+         "DeleteMarkerCount" => "0",
+         "InfrequentAccessObjectCount" => "0",
+         "InfrequentAccessRealStorage" => "0",
+         "InfrequentAccessStorage" => "0",
+         "LastModifiedTime" => "1690118142",
+         "LiveChannelCount" => "0",
+         "MultipartPartCount" => "59",
+         "MultipartUploadCount" => "30",
+         "ObjectCount" => "5413",
+         "ReservedCapacityObjectCount" => "0",
+         "ReservedCapacityStorage" => "0",
+         "StandardObjectCount" => "5413",
+         "StandardStorage" => "9619258561",
+         "Storage" => "9619258561"
+       }}
+  """
+  @spec get_bucket_stat(t(), Typespecs.bucket()) ::
+          {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+  def get_bucket_stat(client, bucket) do
+    LibOss.Request.new(
+      method: :get,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      sub_resources: [{"stat", nil}]
+    )
+    |> then(&request(client, &1))
+    |> case do
+      {:ok, %{body: body}} ->
+        body
+        |> XmlToMap.naive_map()
+        |> case do
+          %{"BucketStat" => ret} -> {:ok, ret}
+          _ -> Error.new("invalid response body: #{inspect(body)}")
+        end
+
+      err ->
+        err
+    end
+    |> LibOss.Utils.debug()
+  end
 end

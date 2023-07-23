@@ -50,4 +50,8 @@ defmodule LibOss.BucketTest do
   test "location", %{cli: cli, bucket: bucket} do
     assert {:ok, _} = LibOss.get_bucket_location(cli, bucket)
   end
+
+  test "stat", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.get_bucket_stat(cli, bucket)
+  end
 end
