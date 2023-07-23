@@ -734,13 +734,6 @@ defmodule LibOss do
     request(client, req)
     |> case do
       {:ok, %{body: body}} ->
-        # %{
-        #   "InitiateMultipartUploadResult" => %{
-        #     "Bucket" => "...",
-        #     "Key" => "test/test.txt",
-        #     "UploadId" => "uploadid"
-        #   }
-        # }
         body
         |> XmlToMap.naive_map()
         |> case do
@@ -1245,6 +1238,40 @@ defmodule LibOss do
         |> XmlToMap.naive_map()
         |> case do
           %{"BucketInfo" => ret} -> {:ok, ret}
+          _ -> Error.new("invalid response body: #{inspect(body)}")
+        end
+
+      err ->
+        err
+    end
+  end
+
+  @doc """
+  GetBucketLocation接口用于查看存储空间（Bucket）的位置信息。
+
+  Doc: https://help.aliyun.com/document_detail/31967.html
+
+  ## Examples
+
+      iex> LibOss.get_bucket_location(cli, bucket)
+      {:ok, "oss-cn-shenzhen"}
+  """
+  @spec get_bucket_location(t(), Typespecs.bucket()) ::
+          {:ok, Typespecs.bucket()} | {:error, Error.t()}
+  def get_bucket_location(client, bucket) do
+    LibOss.Request.new(
+      method: :get,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      sub_resources: [{"location", nil}]
+    )
+    |> then(&request(client, &1))
+    |> case do
+      {:ok, %{body: body}} ->
+        body
+        |> XmlToMap.naive_map()
+        |> case do
+          %{"LocationConstraint" => ret} -> {:ok, ret}
           _ -> Error.new("invalid response body: #{inspect(body)}")
         end
 
