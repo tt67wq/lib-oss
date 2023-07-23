@@ -1337,6 +1337,71 @@ defmodule LibOss do
       err ->
         err
     end
+  end
+
+  @doc """
+  PutBucketAcl接口用于设置或修改存储空间（Bucket）的访问权限（ACL）。
+
+  Doc: https://help.aliyun.com/document_detail/31960.html
+
+  ## Examples
+
+      iex> LibOss.put_bucket_acl(cli, bucket, "public-read")
+  """
+  @spec put_bucket_acl(t(), Typespecs.bucket(), Typespecs.acl()) ::
+          {:ok, any()} | {:error, Error.t()}
+  def put_bucket_acl(client, bucket, acl) do
+    if acl not in ["private", "public-read", "public-read-write"] do
+      raise ArgumentError, "invalid acl: #{acl}"
+    end
+
+    LibOss.Request.new(
+      method: :put,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      sub_resources: [{"acl", nil}],
+      headers: [{"x-oss-acl", acl}]
+    )
+    |> then(&request(client, &1))
+    |> LibOss.Utils.debug()
+  end
+
+  @doc """
+  GetBucketAcl接口用于获取某个存储空间（Bucket）的访问权限（ACL）。
+
+  Doc: https://help.aliyun.com/document_detail/31966.html
+
+  ## Examples
+
+      iex> LibOss.get_bucket_acl(cli, bucket)
+      {:ok,
+      %{
+         "AccessControlList" => %{"Grant" => "public-read"},
+         "Owner" => %{"DisplayName" => "107412446268415", "ID" => "107412446264153"}
+       }}
+  """
+  @spec get_bucket_acl(t(), Typespecs.bucket()) ::
+          {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+  def get_bucket_acl(client, bucket) do
+    LibOss.Request.new(
+      method: :get,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      sub_resources: [{"acl", nil}]
+    )
+    |> then(&request(client, &1))
+    |> case do
+      {:ok, %{body: body}} ->
+        body
+        |> XmlToMap.naive_map()
+        |> case do
+          %{"AccessControlPolicy" => ret} -> {:ok, ret}
+          _ -> Error.new("invalid response body: #{inspect(body)}")
+        end
+
+      err ->
+        err
+    end
     |> LibOss.Utils.debug()
   end
 end

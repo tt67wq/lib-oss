@@ -44,12 +44,10 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
     - [x] 获取bucket存储容量以及文件（Object）数量
     - [x] 查看bucket的位置信息
 
-  - [ ] 合规保留策略
   - [ ] 权限控制
   - [ ] 生命周期
   - [ ] 传输加速
   - [ ] 版本控制
-  - [ ] 接入点
   - [ ] 数据复制
   - [ ] 授权策略
   - [ ] 清单

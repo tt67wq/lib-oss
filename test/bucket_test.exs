@@ -54,4 +54,9 @@ defmodule LibOss.BucketTest do
   test "stat", %{cli: cli, bucket: bucket} do
     assert {:ok, _} = LibOss.get_bucket_stat(cli, bucket)
   end
+
+  test "acl", %{cli: cli, bucket: bucket} do
+    assert {:ok, _} = LibOss.put_bucket_acl(cli, bucket, "public-read")
+    assert {:ok, _} = LibOss.get_bucket_acl(cli, bucket)
+  end
 end
