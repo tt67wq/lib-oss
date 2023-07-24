@@ -6,6 +6,11 @@ defmodule LibOss.Request do
   alias LibOss.Typespecs
 
   @request_schema [
+    host: [
+      type: :string,
+      doc: "OSS host",
+      default: ""
+    ],
     method: [
       type: {:in, [:get, :put, :post, :delete, :head, :options, :patch]},
       doc: "HTTP method",
@@ -72,6 +77,7 @@ defmodule LibOss.Request do
   @type request_schema_t :: [unquote(NimbleOptions.option_typespec(@request_schema))]
 
   @type t :: %__MODULE__{
+          host: Typespecs.host(),
           method: Typespecs.method(),
           object: String.t(),
           resource: String.t(),
@@ -85,6 +91,7 @@ defmodule LibOss.Request do
         }
 
   defstruct [
+    :host,
     :method,
     :object,
     :resource,
@@ -239,7 +246,16 @@ defmodule LibOss.Request do
     (h |> to_string() |> String.downcase()) <> ":" <> to_string(v)
   end
 
-  defp content_type(%{resource: resource}) do
+  defp content_type(%{resource: resource, headers: headers}) do
+    headers
+    |> Enum.find(fn {k, _} -> k in ["Content-Type", "content-type"] end)
+    |> case do
+      nil -> content_type_from_resource(resource)
+      {_, v} -> v
+    end
+  end
+
+  defp content_type_from_resource(resource) do
     case Path.extname(resource) do
       "." <> name -> MIME.type(name)
       _ -> "application/octet-stream"

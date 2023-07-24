@@ -85,9 +85,13 @@ defmodule LibOss do
       |> LibOss.Request.auth(client)
 
     host =
-      case req.bucket do
-        "" -> client.endpoint
-        _ -> "#{req.bucket}.#{client.endpoint}"
+      if req.host != "" do
+        req.host
+      else
+        case req.bucket do
+          "" -> client.endpoint
+          _ -> "#{req.bucket}.#{client.endpoint}"
+        end
       end
 
     object =
@@ -1363,7 +1367,6 @@ defmodule LibOss do
       headers: [{"x-oss-acl", acl}]
     )
     |> then(&request(client, &1))
-    |> LibOss.Utils.debug()
   end
 
   @doc """
@@ -1402,6 +1405,5 @@ defmodule LibOss do
       err ->
         err
     end
-    |> LibOss.Utils.debug()
   end
 end

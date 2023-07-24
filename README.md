@@ -44,9 +44,19 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
     - [x] 获取bucket存储容量以及文件（Object）数量
     - [x] 查看bucket的位置信息
 
+  - [ ] 接入点
+    - [ ] 创建接入点
+    - [ ] 删除接入点
+    - [ ] 获取接入点
+    - [ ] 列举接入点
+    - [ ] 配置接入点策略配置
+    - [ ] 获取接入点策略配置
+    - [ ] 删除接入点策略配置
+
   - [x] 权限控制
     - [x] 设置bucket ACL
     - [x] 获取bucket ACL
+
   - [ ] 生命周期
   - [ ] 传输加速
   - [ ] 版本控制

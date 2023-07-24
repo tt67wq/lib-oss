@@ -4,6 +4,7 @@ defmodule LibOss.Typespecs do
   """
 
   @type opts :: keyword()
+  @type host :: String.t()
   @type method :: :get | :post | :head | :patch | :delete | :options | :put
   @type headers :: [{String.t(), String.t()}]
   @type body :: iodata() | nil
@@ -18,4 +19,5 @@ defmodule LibOss.Typespecs do
   @type bucket :: bitstring()
   @type object :: bitstring()
   @type acl :: bitstring()
+  @type access_point_name :: bitstring()
 end
