@@ -1,3 +1,4 @@
+<!-- MDOC !-->
 # LibOss
 
 LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/31815.html)的SDK，目前支持的功能有：
@@ -84,8 +85,7 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
 
 ```elixir
 Mix.install([
-  # 尚未上传至hex.pm，暂时使用github地址
-  {:lib_oss, github: "tt67wq/lib-oss", branch: "master"}
+  {:lib_oss, "~> 0.1.0"}
 ])
 
 # 创建一个oss客户端
@@ -109,3 +109,4 @@ Supervisor.start_link(
 LibOss.put_object(cli, "hope-data", "/test/test.txt", content)
 ```
 
+更多使用方法请参考[API文档](https://hexdocs.pm/lib_oss/LibOss.html)
