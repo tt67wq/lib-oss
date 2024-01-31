@@ -113,11 +113,9 @@ defmodule LibOss.Request do
   @spec new(request_schema_t()) :: t()
   def new(opts) do
     opts =
-      opts
-      |> NimbleOptions.validate!(@request_schema)
+      NimbleOptions.validate!(opts, @request_schema)
 
-    __MODULE__
-    |> struct(opts)
+    struct(__MODULE__, opts)
   end
 
   @spec build_headers(t(), LibOss.t()) :: t()
@@ -132,7 +130,7 @@ defmodule LibOss.Request do
       {"Host", host},
       {"Content-Type", content_type(request)},
       {"Content-MD5", content_md5(request)},
-      {"Content-Length", byte_size(request.body) |> to_string()},
+      {"Content-Length", request.body |> byte_size() |> to_string()},
       {"Date", gmt_now()} | request.headers
     ]
 
@@ -155,7 +153,11 @@ defmodule LibOss.Request do
     |> string_to_sign()
     |> tap(fn x ->
       if request.debug do
-        IO.inspect(x, label: "string_to_sign")
+        LibOss.Utils.stacktrace(%{
+          request: request,
+          client: client,
+          string_to_sign: x
+        })
       end
     end)
     |> LibOss.Utils.do_sign(client.access_key_secret)
@@ -163,22 +165,20 @@ defmodule LibOss.Request do
 
   @spec string_to_sign(t()) :: binary()
   defp string_to_sign(%{scheme: "rtmp"} = request) do
-    [
-      expire_time(request),
-      canonicalize_query_params(request) <> canonicalize_resource(request)
-    ]
-    |> Enum.join("\n")
+    Enum.join([expire_time(request), canonicalize_query_params(request) <> canonicalize_resource(request)], "\n")
   end
 
   defp string_to_sign(request) do
-    [
-      "#{@verbs[request.method]}",
-      get_header(request, "Content-MD5"),
-      get_header(request, "Content-Type"),
-      expires_time(request),
-      canonicalize_oss_headers(request) <> canonicalize_resource(request)
-    ]
-    |> Enum.join("\n")
+    Enum.join(
+      [
+        "#{@verbs[request.method]}",
+        get_header(request, "Content-MD5"),
+        get_header(request, "Content-Type"),
+        expires_time(request),
+        canonicalize_oss_headers(request) <> canonicalize_resource(request)
+      ],
+      "\n"
+    )
   end
 
   @spec get_header(t(), String.t()) :: binary()
@@ -198,13 +198,12 @@ defmodule LibOss.Request do
     |> to_string()
   end
 
-  defp expire_time(%{expires: expires}), do: expires |> to_string()
+  defp expire_time(%{expires: expires}), do: to_string(expires)
 
   defp canonicalize_oss_headers(%{headers: headers}) do
     headers
-    |> Stream.filter(&is_oss_header?/1)
-    |> Stream.map(&encode_header/1)
-    |> Enum.join("\n")
+    |> Stream.filter(&oss_header?/1)
+    |> Enum.map_join("\n", &encode_header/1)
     |> case do
       "" -> ""
       str -> str <> "\n"
@@ -221,11 +220,10 @@ defmodule LibOss.Request do
 
   defp canonicalize_resource(%{resource: resource, sub_resources: sub_resources}) do
     sub_resources
-    |> Stream.map(fn
+    |> Enum.map_join("&", fn
       {k, nil} -> k
       {k, v} -> "#{k}=#{v}"
     end)
-    |> Enum.join("&")
     |> case do
       "" -> resource
       query_string -> resource <> "?" <> query_string
@@ -238,7 +236,7 @@ defmodule LibOss.Request do
     |> Enum.join()
   end
 
-  defp is_oss_header?({h, _}) do
+  defp oss_header?({h, _}) do
     Regex.match?(~r/^x-oss-/i, to_string(h))
   end
 
@@ -271,7 +269,7 @@ defmodule LibOss.Request do
   end
 
   @spec gmt_now() :: binary()
-  defp gmt_now() do
+  defp gmt_now do
     {:ok, dt} = DateTime.now("Etc/UTC")
     Calendar.strftime(dt, "%a, %d %b %Y %H:%M:%S GMT")
   end
