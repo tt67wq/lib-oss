@@ -85,7 +85,7 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
 
 ```elixir
 Mix.install([
-  {:lib_oss, "~> 0.1.0"}
+  {:lib_oss, "~> 0.1"}
 ])
 
 # 创建一个oss客户端

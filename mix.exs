@@ -1,8 +1,9 @@
 defmodule LibOss.MixProject do
+  @moduledoc false
   use Mix.Project
 
   @name "lib_oss"
-  @version "0.1.0"
+  @version "0.1.1"
   @repo_url "https://github.com/tt67wq/lib-oss"
   @description "A Elixir port SDK for Aliyun OSS"
 
@@ -10,7 +11,7 @@ defmodule LibOss.MixProject do
     [
       app: :lib_oss,
       version: @version,
-      elixir: "~> 1.14",
+      elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       source_url: @repo_url,
