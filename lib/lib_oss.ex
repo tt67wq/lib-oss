@@ -1,12 +1,14 @@
 defmodule LibOss do
-  @external_resource "README.md"
   @moduledoc "README.md"
              |> File.read!()
              |> String.split("<!-- MDOC !-->")
              |> Enum.fetch!(1)
 
-  alias LibOss.{Error, Typespecs}
+  alias LibOss.Exception
+  alias LibOss.Http
+  alias LibOss.Typespecs
 
+  @external_resource "README.md"
   @lib_oss_opts_schema [
     name: [
       type: :atom,
@@ -67,7 +69,7 @@ defmodule LibOss do
   """
   @spec new(lib_oss_opts_t()) :: t()
   def new(opts) do
-    opts = opts |> NimbleOptions.validate!(@lib_oss_opts_schema)
+    opts = NimbleOptions.validate!(opts, @lib_oss_opts_schema)
     struct(__MODULE__, opts)
   end
 
@@ -80,7 +82,7 @@ defmodule LibOss do
     LibOss.Http.start_link(client.http_impl)
   end
 
-  @spec request(t(), LibOss.Request.t()) :: {:ok, LibOss.Http.Response.t()} | {:error, Error.t()}
+  @spec request(t(), LibOss.Request.t()) :: {:ok, LibOss.Http.Response.t()} | {:error, Exception.t()}
   defp request(client, req) do
     req =
       req
@@ -99,11 +101,10 @@ defmodule LibOss do
 
     object =
       req.sub_resources
-      |> Stream.map(fn
+      |> Enum.map_join("&", fn
         {k, nil} -> k
         {k, v} -> "#{k}=#{v}"
       end)
-      |> Enum.join("&")
       |> case do
         "" -> req.object
         query_string -> "#{req.object}?#{query_string}"
@@ -150,7 +151,8 @@ defmodule LibOss do
 
   def get_token(cli, bucket, object, expire_sec, callback) do
     expire =
-      DateTime.now!("Etc/UTC")
+      "Etc/UTC"
+      |> DateTime.now!()
       |> DateTime.add(expire_sec, :second)
 
     policy =
@@ -163,8 +165,7 @@ defmodule LibOss do
       |> Base.encode64()
 
     signature =
-      policy
-      |> LibOss.Utils.do_sign(cli.access_key_secret)
+      LibOss.Utils.do_sign(policy, cli.access_key_secret)
 
     base64_callback_body =
       %{
@@ -176,7 +177,7 @@ defmodule LibOss do
       |> String.trim()
       |> Base.encode64()
 
-    %{
+    Jason.encode(%{
       "accessid" => cli.access_key_id,
       "host" => "https://#{bucket}.#{cli.endpoint}",
       "policy" => policy,
@@ -184,8 +185,7 @@ defmodule LibOss do
       "expire" => DateTime.to_unix(expire),
       "dir" => object,
       "callback" => base64_callback_body
-    }
-    |> Jason.encode()
+    })
   end
 
   @doc """
@@ -204,7 +204,7 @@ defmodule LibOss do
           Typespecs.body(),
           Typespecs.headers()
         ) ::
-          {:ok, any()} | {:error, Error.t()}
+          {:ok, any()} | {:error, Exception.t()}
   def put_object(client, bucket, object, data, headers \\ []) do
     req =
       LibOss.Request.new(
@@ -235,7 +235,7 @@ defmodule LibOss do
           Typespecs.bucket(),
           Typespecs.object(),
           Typespecs.headers()
-        ) :: {:ok, any()} | {:error, Error.t()}
+        ) :: {:ok, any()} | {:error, Exception.t()}
   def copy_object(client, bucket, object, source_bucket, source_object, headers \\ []) do
     req =
       LibOss.Request.new(
@@ -261,7 +261,7 @@ defmodule LibOss do
       LibOss.get_object(cli, bucket, "/test/test.txt")
   """
   @spec get_object(t(), Typespecs.bucket(), Typespecs.object(), Typespecs.headers()) ::
-          {:ok, iodata()} | {:error, Error.t()}
+          {:ok, iodata()} | {:error, Exception.t()}
   def get_object(client, bucket, object, req_headers \\ []) do
     req =
       LibOss.Request.new(
@@ -272,9 +272,10 @@ defmodule LibOss do
         headers: req_headers
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{body: body}} -> {:ok, body}
+      {:ok, %Http.Response{body: body}} -> {:ok, body}
       {:error, error} -> {:error, error}
     end
   end
@@ -288,7 +289,7 @@ defmodule LibOss do
 
       {:ok, _} = LibOss.delete_object(cli, bucket, "/test/test.txt")
   """
-  @spec delete_object(t(), Typespecs.bucket(), String.t()) :: {:ok, any()} | {:error, Error.t()}
+  @spec delete_object(t(), Typespecs.bucket(), String.t()) :: {:ok, any()} | {:error, Exception.t()}
   def delete_object(client, bucket, object) do
     req =
       LibOss.Request.new(
@@ -314,14 +315,10 @@ defmodule LibOss do
           t(),
           Typespecs.bucket(),
           [Typespecs.object()]
-        ) :: {:ok, any()} | {:error, Error.t()}
+        ) :: {:ok, any()} | {:error, Exception.t()}
   def delete_multiple_objects(client, bucket, objects) do
     body =
-      objects
-      |> Enum.map(fn object ->
-        "<Object><Key>#{object}</Key></Object>"
-      end)
-      |> Enum.join("")
+      Enum.map_join(objects, "", fn object -> "<Object><Key>#{object}</Key></Object>" end)
 
     req =
       LibOss.Request.new(
@@ -347,13 +344,13 @@ defmodule LibOss do
       iex> LibOss.append_object(cli, bucket, "/test/test.txt", 6, "world")
   """
   @spec append_object(
-          t(),
-          Typespecs.bucket(),
-          Typespecs.object(),
-          non_neg_integer(),
-          Typespecs.body(),
-          Typespecs.headers()
-        ) :: {:ok, any()} | {:error, Error.t()}
+          client :: t(),
+          bucket :: Typespecs.bucket(),
+          object :: Typespecs.object(),
+          since :: non_neg_integer(),
+          data :: Typespecs.body(),
+          headers :: Typespecs.headers()
+        ) :: {:ok, any()} | {:error, Exception.t()}
   def append_object(client, bucket, object, since, data, headers \\ []) do
     req =
       LibOss.Request.new(
@@ -396,7 +393,7 @@ defmodule LibOss do
        }}
   """
   @spec head_object(t(), Typespecs.bucket(), Typespecs.object(), Typespecs.headers()) ::
-          {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+          {:ok, Typespecs.string_dict()} | {:error, Exception.t()}
   def head_object(client, bucket, object, headers \\ []) do
     req =
       LibOss.Request.new(
@@ -407,12 +404,11 @@ defmodule LibOss do
         headers: headers
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{headers: headers}} ->
-        {:ok,
-         headers
-         |> Enum.into(%{})}
+      {:ok, %Http.Response{headers: headers}} ->
+        {:ok, Map.new(headers)}
 
       err ->
         err
@@ -446,7 +442,7 @@ defmodule LibOss do
        }}
   """
   @spec get_object_meta(t(), Typespecs.bucket(), Typespecs.object()) ::
-          {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+          {:ok, Typespecs.string_dict()} | {:error, Exception.t()}
   def get_object_meta(client, bucket, object) do
     req =
       LibOss.Request.new(
@@ -456,12 +452,11 @@ defmodule LibOss do
         bucket: bucket
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{headers: headers}} ->
-        {:ok,
-         headers
-         |> Enum.into(%{})}
+      {:ok, %Http.Response{headers: headers}} ->
+        {:ok, Map.new(headers)}
 
       err ->
         err
@@ -482,10 +477,10 @@ defmodule LibOss do
           Typespecs.bucket(),
           Typespecs.object(),
           Typespecs.acl()
-        ) :: {:ok, any()} | {:error, Error.t()}
+        ) :: {:ok, any()} | {:error, Exception.t()}
   def put_object_acl(client, bucket, object, acl) do
-    if acl not in ["private", "public-read", "public-read-write", "default"] do
-      raise Error.new("invalid acl: #{acl}")
+    unless acl in ["private", "public-read", "public-read-write", "default"] do
+      raise Exception.new("invalid acl", acl)
     end
 
     req =
@@ -512,7 +507,7 @@ defmodule LibOss do
       {:ok, "public-read"}
   """
   @spec get_object_acl(t(), Typespecs.bucket(), Typespecs.object()) ::
-          {:ok, Typespecs.acl()} | {:error, Error.t()}
+          {:ok, Typespecs.acl()} | {:error, Exception.t()}
   def get_object_acl(client, bucket, object) do
     req =
       LibOss.Request.new(
@@ -523,9 +518,10 @@ defmodule LibOss do
         sub_resources: [{"acl", nil}]
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         body
         |> XmlToMap.naive_map()
         |> case do
@@ -533,7 +529,7 @@ defmodule LibOss do
             {:ok, grant}
 
           _ ->
-            Error.new("invalid response body: #{inspect(body)}")
+            {:error, Exception.new("invalid response", body)}
         end
 
       err ->
@@ -556,7 +552,7 @@ defmodule LibOss do
           Typespecs.object(),
           Typespecs.object(),
           Typespecs.headers()
-        ) :: {:ok, any()} | {:error, Error.t()}
+        ) :: {:ok, any()} | {:error, Exception.t()}
   def put_symlink(client, bucket, object, target_object, headers \\ []) do
     req =
       LibOss.Request.new(
@@ -582,7 +578,7 @@ defmodule LibOss do
       {:ok, "/test/test_symlink.txt"}
   """
   @spec get_symlink(t(), Typespecs.bucket(), Typespecs.object()) ::
-          {:ok, bitstring()} | {:error, Error.t()}
+          {:ok, bitstring()} | {:error, Exception.t()}
   def get_symlink(client, bucket, object) do
     req =
       LibOss.Request.new(
@@ -593,15 +589,16 @@ defmodule LibOss do
         sub_resources: [{"symlink", nil}]
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{headers: headers}} ->
+      {:ok, %Http.Response{headers: headers}} ->
         headers
         |> Enum.find(fn {k, _} -> k == "x-oss-symlink-target" end)
-        |> (fn
-              {_, v} -> {:ok, URI.decode(v)}
-              nil -> Error.new("x-oss-symlink-target not found")
-            end).()
+        |> then(fn
+          {_, v} -> {:ok, URI.decode(v)}
+          nil -> Exception.new("x-oss-symlink-target not found")
+        end)
 
       err ->
         err
@@ -622,11 +619,10 @@ defmodule LibOss do
           Typespecs.bucket(),
           Typespecs.object(),
           Typespecs.string_dict()
-        ) :: {:ok, any()} | {:error, Error.t()}
+        ) :: {:ok, any()} | {:error, Exception.t()}
   def put_object_tagging(client, bucket, object, tags) do
     tagging =
-      tags
-      |> Enum.map(fn {k, v} -> "<Tag><Key>#{k}</Key><Value>#{v}</Value></Tag>" end)
+      Enum.map(tags, fn {k, v} -> "<Tag><Key>#{k}</Key><Value>#{v}</Value></Tag>" end)
 
     req =
       LibOss.Request.new(
@@ -656,7 +652,7 @@ defmodule LibOss do
        ]}
   """
   @spec get_object_tagging(t(), Typespecs.bucket(), Typespecs.object()) ::
-          {:ok, [Typespecs.string_dict()]} | {:error, Error.t()}
+          {:ok, [Typespecs.string_dict()]} | {:error, Exception.t()}
   def get_object_tagging(client, bucket, object) do
     req =
       LibOss.Request.new(
@@ -667,9 +663,10 @@ defmodule LibOss do
         sub_resources: [{"tagging", nil}]
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         body
         |> XmlToMap.naive_map()
         |> case do
@@ -677,7 +674,7 @@ defmodule LibOss do
             {:ok, tags}
 
           _ ->
-            Error.new("invalid response body: #{inspect(body)}")
+            {:error, Exception.new("invalid response", body)}
         end
 
       err ->
@@ -695,7 +692,7 @@ defmodule LibOss do
       iex> LibOss.delete_object_tagging(cli, bucket, "/test/test.txt")
   """
   @spec delete_object_tagging(t(), Typespecs.bucket(), Typespecs.object()) ::
-          {:ok, any()} | {:error, Error.t()}
+          {:ok, any()} | {:error, Exception.t()}
   def delete_object_tagging(client, bucket, object) do
     req =
       LibOss.Request.new(
@@ -726,7 +723,7 @@ defmodule LibOss do
           Typespecs.bucket(),
           Typespecs.object(),
           Typespecs.headers()
-        ) :: {:ok, String.t()} | {:error, Error.t()}
+        ) :: {:ok, String.t()} | {:error, Exception.t()}
   def init_multi_upload(client, bucket, object, req_headers \\ []) do
     req =
       LibOss.Request.new(
@@ -738,9 +735,10 @@ defmodule LibOss do
         sub_resources: [{"uploads", nil}]
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         body
         |> XmlToMap.naive_map()
         |> case do
@@ -748,7 +746,7 @@ defmodule LibOss do
             {:ok, upload_id}
 
           _ ->
-            Error.new("invalid response body: #{inspect(body)}")
+            {:error, Exception.new("invalid response", body)}
         end
 
       err ->
@@ -773,7 +771,7 @@ defmodule LibOss do
           String.t(),
           non_neg_integer(),
           binary()
-        ) :: {:ok, bitstring()} | {:error, Error.t()}
+        ) :: {:ok, bitstring()} | {:error, Exception.t()}
   def upload_part(client, bucket, object, upload_id, partNumber, data) do
     req =
       LibOss.Request.new(
@@ -785,15 +783,16 @@ defmodule LibOss do
         body: data
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{headers: headers}} ->
+      {:ok, %Http.Response{headers: headers}} ->
         headers
         |> Enum.find(fn {k, _} -> k == "etag" end)
-        |> (fn
-              {_, v} -> {:ok, v}
-              nil -> Error.new("etag not found")
-            end).()
+        |> then(fn
+          {_, v} -> {:ok, v}
+          nil -> {:error, Exception.new("etag not found")}
+        end)
     end
   end
 
@@ -837,7 +836,7 @@ defmodule LibOss do
           t(),
           Typespecs.bucket(),
           Typespecs.params()
-        ) :: {:ok, [Typespecs.string_dict()]} | {:error, Error.t()}
+        ) :: {:ok, [Typespecs.string_dict()]} | {:error, Exception.t()}
   def list_multipart_uploads(client, bucket, query_params) do
     req =
       LibOss.Request.new(
@@ -848,9 +847,10 @@ defmodule LibOss do
         params: query_params
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         body
         |> XmlToMap.naive_map()
         |> case do
@@ -858,7 +858,7 @@ defmodule LibOss do
             {:ok, ret}
 
           _ ->
-            Error.new("invalid response body: #{inspect(body)}")
+            {:error, Exception.new("invalid response", body)}
         end
 
       err ->
@@ -880,7 +880,7 @@ defmodule LibOss do
           Typespecs.bucket(),
           Typespecs.object(),
           String.t()
-        ) :: {:ok, any()} | {:error, Error.t()}
+        ) :: {:ok, any()} | {:error, Exception.t()}
   def abort_multipart_upload(client, bucket, object, upload_id) do
     req =
       LibOss.Request.new(
@@ -914,15 +914,13 @@ defmodule LibOss do
           String.t(),
           [{non_neg_integer(), bitstring()}],
           Typespecs.headers()
-        ) :: {:ok, any()} | {:error, Error.t()}
+        ) :: {:ok, any()} | {:error, Exception.t()}
   def complete_multipart_upload(client, bucket, object, upload_id, parts, headers \\ []) do
     # format parts
     body =
-      parts
-      |> Enum.map(fn {partNumber, etag} ->
-        "<Part><PartNumber>#{partNumber}</PartNumber><ETag>#{etag}</ETag></Part>"
+      Enum.map_join(parts, "", fn {part_number, etag} ->
+        "<Part><PartNumber>#{part_number}</PartNumber><ETag>#{etag}</ETag></Part>"
       end)
-      |> Enum.join("")
 
     req =
       LibOss.Request.new(
@@ -990,7 +988,7 @@ defmodule LibOss do
           Typespecs.object(),
           String.t(),
           Typespecs.params()
-        ) :: {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+        ) :: {:ok, Typespecs.string_dict()} | {:error, Exception.t()}
   def list_parts(client, bucket, object, upload_id, query_params \\ %{}) do
     req =
       LibOss.Request.new(
@@ -1002,12 +1000,11 @@ defmodule LibOss do
         params: query_params
       )
 
-    request(client, req)
+    client
+    |> request(req)
     |> case do
-      {:ok, %{body: body}} ->
-        {:ok,
-         body
-         |> XmlToMap.naive_map()}
+      {:ok, %Http.Response{body: body}} ->
+        {:ok, XmlToMap.naive_map(body)}
 
       err ->
         err
@@ -1026,14 +1023,8 @@ defmodule LibOss do
       {:ok, _} = LibOss.put_bucket(cli, your-new-bucket)
   """
   @spec put_bucket(t(), Typespecs.bucket(), bitstring(), bitstring(), Typespecs.headers()) ::
-          {:ok, any()} | {:error, Error.t()}
-  def put_bucket(
-        client,
-        bucket,
-        storage_class \\ "Standard",
-        data_redundancy_type \\ "LRS",
-        headers \\ []
-      )
+          {:ok, any()} | {:error, Exception.t()}
+  def put_bucket(client, bucket, storage_class \\ "Standard", data_redundancy_type \\ "LRS", headers \\ [])
 
   def put_bucket(client, bucket, storage_class, data_redundancy_type, headers) do
     body = """
@@ -1044,13 +1035,8 @@ defmodule LibOss do
     </CreateBucketConfiguration>
     """
 
-    LibOss.Request.new(
-      method: :put,
-      bucket: bucket,
-      resource: "/" <> bucket <> "/",
-      body: body,
-      headers: headers
-    )
+    [method: :put, bucket: bucket, resource: "/" <> bucket <> "/", body: body, headers: headers]
+    |> LibOss.Request.new()
     |> then(&request(client, &1))
   end
 
@@ -1063,13 +1049,10 @@ defmodule LibOss do
 
       {:ok, _} = LibOss.delete_bucket(cli, to-delete-bucket)
   """
-  @spec delete_bucket(t(), Typespecs.bucket()) :: {:ok, any()} | {:error, Error.t()}
+  @spec delete_bucket(t(), Typespecs.bucket()) :: {:ok, any()} | {:error, Exception.t()}
   def delete_bucket(client, bucket) do
-    LibOss.Request.new(
-      method: :delete,
-      bucket: bucket,
-      resource: "/" <> bucket <> "/"
-    )
+    [method: :delete, bucket: bucket, resource: "/" <> bucket <> "/"]
+    |> LibOss.Request.new()
     |> then(&request(client, &1))
   end
 
@@ -1111,22 +1094,21 @@ defmodule LibOss do
       ]}
   """
   @spec get_bucket(t(), Typespecs.bucket(), Typespecs.params()) ::
-          {:ok, [any()]} | {:error, Error.t()}
+          {:ok, [any()]} | {:error, Exception.t()}
   def get_bucket(client, bucket, query_params) do
-    LibOss.Request.new(
-      method: :get,
-      bucket: bucket,
-      resource: "/" <> bucket <> "/",
-      params: query_params
-    )
+    [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", params: query_params]
+    |> LibOss.Request.new()
     |> then(&request(client, &1))
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         body
         |> XmlToMap.naive_map()
         |> case do
-          %{"ListBucketResult" => %{"Contents" => ret}} -> {:ok, ret}
-          _ -> Error.new("invalid response body: #{inspect(body)}")
+          %{"ListBucketResult" => %{"Contents" => ret}} ->
+            {:ok, ret}
+
+          _ ->
+            {:error, Exception.new("invalid response", body)}
         end
 
       err ->
@@ -1171,23 +1153,19 @@ defmodule LibOss do
        ]}
   """
   @spec list_object_v2(t(), Typespecs.bucket(), Typespecs.params()) ::
-          {:ok, [any()]} | {:error, Error.t()}
+          {:ok, [any()]} | {:error, Exception.t()}
   def list_object_v2(client, bucket, query_params) do
-    LibOss.Request.new(
-      method: :get,
-      bucket: bucket,
-      resource: "/" <> bucket <> "/",
-      params: Map.put(query_params, "list-type", "2")
-    )
+    [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", params: Map.put(query_params, "list-type", "2")]
+    |> LibOss.Request.new()
     |> then(&request(client, &1))
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         ret =
           body
           |> XmlToMap.naive_map()
           |> case do
             %{"ListBucketResult" => %{"Contents" => ret}} -> {:ok, ret}
-            _ -> Error.new("invalid response body: #{inspect(body)}")
+            _ -> {:error, Exception.new("invalid response", body)}
           end
 
         {:ok, ret}
@@ -1230,22 +1208,18 @@ defmodule LibOss do
          }
        }}
   """
-  @spec get_bucket_info(t(), Typespecs.bucket()) :: {:ok, any()} | {:error, Error.t()}
+  @spec get_bucket_info(t(), Typespecs.bucket()) :: {:ok, any()} | {:error, Exception.t()}
   def get_bucket_info(client, bucket) do
-    LibOss.Request.new(
-      method: :get,
-      bucket: bucket,
-      resource: "/" <> bucket <> "/",
-      sub_resources: [{"bucketInfo", nil}]
-    )
+    [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", sub_resources: [{"bucketInfo", nil}]]
+    |> LibOss.Request.new()
     |> then(&request(client, &1))
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         body
         |> XmlToMap.naive_map()
         |> case do
           %{"BucketInfo" => ret} -> {:ok, ret}
-          _ -> Error.new("invalid response body: #{inspect(body)}")
+          _ -> {:error, Exception.new("invalid response", body)}
         end
 
       err ->
@@ -1264,22 +1238,18 @@ defmodule LibOss do
       {:ok, "oss-cn-shenzhen"}
   """
   @spec get_bucket_location(t(), Typespecs.bucket()) ::
-          {:ok, Typespecs.bucket()} | {:error, Error.t()}
+          {:ok, Typespecs.bucket()} | {:error, Exception.t()}
   def get_bucket_location(client, bucket) do
-    LibOss.Request.new(
-      method: :get,
-      bucket: bucket,
-      resource: "/" <> bucket <> "/",
-      sub_resources: [{"location", nil}]
-    )
+    [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", sub_resources: [{"location", nil}]]
+    |> LibOss.Request.new()
     |> then(&request(client, &1))
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         body
         |> XmlToMap.naive_map()
         |> case do
           %{"LocationConstraint" => ret} -> {:ok, ret}
-          _ -> Error.new("invalid response body: #{inspect(body)}")
+          _ -> {:error, Exception.new("invalid response", body)}
         end
 
       err ->
@@ -1323,22 +1293,18 @@ defmodule LibOss do
        }}
   """
   @spec get_bucket_stat(t(), Typespecs.bucket()) ::
-          {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+          {:ok, Typespecs.string_dict()} | {:error, Exception.t()}
   def get_bucket_stat(client, bucket) do
-    LibOss.Request.new(
-      method: :get,
-      bucket: bucket,
-      resource: "/" <> bucket <> "/",
-      sub_resources: [{"stat", nil}]
-    )
+    [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", sub_resources: [{"stat", nil}]]
+    |> LibOss.Request.new()
     |> then(&request(client, &1))
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         body
         |> XmlToMap.naive_map()
         |> case do
           %{"BucketStat" => ret} -> {:ok, ret}
-          _ -> Error.new("invalid response body: #{inspect(body)}")
+          _ -> {:error, Exception.new("invalid response", body)}
         end
 
       err ->
@@ -1356,19 +1322,20 @@ defmodule LibOss do
       iex> LibOss.put_bucket_acl(cli, bucket, "public-read")
   """
   @spec put_bucket_acl(t(), Typespecs.bucket(), Typespecs.acl()) ::
-          {:ok, any()} | {:error, Error.t()}
+          {:ok, any()} | {:error, Exception.t()}
   def put_bucket_acl(client, bucket, acl) do
-    if acl not in ["private", "public-read", "public-read-write"] do
+    unless acl in ["private", "public-read", "public-read-write"] do
       raise ArgumentError, "invalid acl: #{acl}"
     end
 
-    LibOss.Request.new(
+    [
       method: :put,
       bucket: bucket,
       resource: "/" <> bucket <> "/",
       sub_resources: [{"acl", nil}],
       headers: [{"x-oss-acl", acl}]
-    )
+    ]
+    |> LibOss.Request.new()
     |> then(&request(client, &1))
   end
 
@@ -1387,22 +1354,18 @@ defmodule LibOss do
        }}
   """
   @spec get_bucket_acl(t(), Typespecs.bucket()) ::
-          {:ok, Typespecs.string_dict()} | {:error, Error.t()}
+          {:ok, Typespecs.string_dict()} | {:error, Exception.t()}
   def get_bucket_acl(client, bucket) do
-    LibOss.Request.new(
-      method: :get,
-      bucket: bucket,
-      resource: "/" <> bucket <> "/",
-      sub_resources: [{"acl", nil}]
-    )
+    [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", sub_resources: [{"acl", nil}]]
+    |> LibOss.Request.new()
     |> then(&request(client, &1))
     |> case do
-      {:ok, %{body: body}} ->
+      {:ok, %Http.Response{body: body}} ->
         body
         |> XmlToMap.naive_map()
         |> case do
           %{"AccessControlPolicy" => ret} -> {:ok, ret}
-          _ -> Error.new("invalid response body: #{inspect(body)}")
+          _ -> {:error, Exception.new("invalid response", body)}
         end
 
       err ->

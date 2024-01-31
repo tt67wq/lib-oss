@@ -2,7 +2,8 @@ defmodule LibOss.Http do
   @moduledoc """
   behavior os http transport
   """
-  alias LibOss.{Error, Typespecs}
+  alias LibOss.Exception
+  alias LibOss.Typespecs
 
   @type t :: struct()
 
@@ -12,13 +13,12 @@ defmodule LibOss.Http do
               http :: t(),
               req :: LibOss.Http.Request.t()
             ) ::
-              {:ok, LibOss.Http.Response.t()} | {:error, Error.t()}
+              {:ok, LibOss.Http.Response.t()} | {:error, Exception.t()}
 
-  defp delegate(%module{} = http, func, args),
-    do: apply(module, func, [http | args])
+  defp delegate(%module{} = http, func, args), do: apply(module, func, [http | args])
 
   @spec do_request(t(), LibOss.Http.Request.t()) ::
-          {:ok, LibOss.Http.Response.t()} | {:error, Error.t()}
+          {:ok, LibOss.Http.Response.t()} | {:error, Exception.t()}
   def do_request(http, req), do: delegate(http, :do_request, [req])
 
   def start_link(%module{} = http) do
@@ -30,9 +30,9 @@ defmodule LibOss.Http.Request do
   @moduledoc """
   http request
   """
-  require Logger
-
   alias LibOss.Typespecs
+
+  require Logger
 
   @http_request_schema [
     scheme: [
@@ -116,7 +116,7 @@ defmodule LibOss.Http.Request do
   """
   @spec new(http_request_schema_t()) :: t()
   def new(opts) do
-    opts = opts |> NimbleOptions.validate!(@http_request_schema)
+    opts = NimbleOptions.validate!(opts, @http_request_schema)
     struct(__MODULE__, opts)
   end
 
@@ -126,7 +126,7 @@ defmodule LibOss.Http.Request do
       if req.params in [nil, %{}] do
         nil
       else
-        req.params |> URI.encode_query()
+        URI.encode_query(req.params)
       end
 
     %URI{
@@ -176,7 +176,7 @@ defmodule LibOss.Http.Response do
 
   @spec new(http_response_schema_t()) :: t()
   def new(opts) do
-    opts = opts |> NimbleOptions.validate!(@http_response_schema)
+    opts = NimbleOptions.validate!(opts, @http_response_schema)
     struct(__MODULE__, opts)
   end
 end
@@ -186,10 +186,12 @@ defmodule LibOss.Http.Default do
   Implement LibOss.Http behavior with Finch
   """
 
-  require Logger
-  alias LibOss.{Http, Error}
+  @behaviour LibOss.Http
 
-  @behaviour Http
+  alias LibOss.Exception
+  alias LibOss.Http
+
+  require Logger
 
   # types
   @type t :: %__MODULE__{
@@ -200,26 +202,28 @@ defmodule LibOss.Http.Default do
 
   @impl Http
   def new(opts \\ []) do
-    opts = opts |> Keyword.put_new(:name, __MODULE__)
+    opts = Keyword.put_new(opts, :name, __MODULE__)
     struct(__MODULE__, opts)
   end
 
   @impl Http
   def do_request(http, req) do
-    with opts <- opts(req.opts),
-         {debug?, opts} <- Keyword.pop(opts, :debug),
-         finch_req <-
-           Finch.build(
-             req.method,
-             Http.Request.url(req),
-             req.headers,
-             req.body,
-             opts
-           ) do
+    opts = opts(req.opts)
+
+    with {debug?, opts} <- Keyword.pop(opts, :debug) do
+      finch_req =
+        Finch.build(
+          req.method,
+          Http.Request.url(req),
+          req.headers,
+          req.body,
+          opts
+        )
+
       if debug? do
         Logger.debug(%{
           "method" => req.method,
-          "url" => Http.Request.url(req) |> URI.to_string(),
+          "url" => req |> Http.Request.url() |> URI.to_string(),
           "params" => req.params,
           "headers" => req.headers,
           "body" => req.body,
@@ -236,11 +240,11 @@ defmodule LibOss.Http.Default do
           {:ok, Http.Response.new(status_code: status, body: body, headers: headers)}
 
         {:ok, %Finch.Response{status: status, body: body}} ->
-          {:error, Error.new("status: #{status}, body: #{body}")}
+          {:error, Exception.new(body, %{status: status})}
 
         {:error, exception} ->
           Logger.error(%{"request" => req, "exception" => exception})
-          {:error, Error.new(inspect(exception))}
+          {:error, Exception.new("request failed", exception)}
       end
     end
   end

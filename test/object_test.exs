@@ -1,4 +1,5 @@
 defmodule LibOss.ObjectTest do
+  @moduledoc false
   use ExUnit.Case
 
   setup_all do
@@ -8,7 +9,8 @@ defmodule LibOss.ObjectTest do
       "access_key_secret" => access_key_secret,
       "bucket" => bucket
     } =
-      File.read!("./tmp/test.json")
+      "./tmp/test.json"
+      |> File.read!()
       |> Jason.decode!()
 
     cli =
@@ -97,7 +99,8 @@ defmodule LibOss.ObjectTest do
   end
 
   defp generate_test_data(length) when is_integer(length) and length > 0 do
-    :crypto.strong_rand_bytes(length)
+    length
+    |> :crypto.strong_rand_bytes()
     |> Base.encode64()
   end
 
