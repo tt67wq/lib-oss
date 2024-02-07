@@ -31,7 +31,7 @@ defmodule LibOss.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:nimble_options, "~> 0.5"},
+      {:nimble_options, "~> 1.1"},
       {:mime, "~> 2.0"},
       {:jason, "~> 1.4"},
       {:elixir_xml_to_map, "~> 2.0"},
