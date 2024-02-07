@@ -1,16 +1,23 @@
 defmodule LibOss.HttpTest do
-  @moduledoc false
   use ExUnit.Case
 
   setup_all do
-    start_link_supervised!({LibOss.Http.Default, []})
-    []
+    http_impl = LibOss.Http.Default.new()
+    start_link_supervised!({LibOss.Http.Default, [http: http_impl]})
+    [http_impl: http_impl]
   end
 
-  test "get" do
+  test "get", %{http_impl: http_impl} do
     req =
-      LibOss.Http.Request.new(scheme: "https", port: 443, host: "www.baidu.com", method: :get, path: "/")
+      [
+        scheme: "https",
+        port: 443,
+        host: "www.baidu.com",
+        method: :get,
+        path: "/"
+      ]
+      |> LibOss.Http.Request.new()
 
-    assert {:ok, _} = LibOss.Http.do_request(LibOss.Http.Default, req)
+    assert {:ok, _} = LibOss.Http.do_request(http_impl, req)
   end
 end

@@ -1,5 +1,4 @@
 defmodule LibOss.BucketTest do
-  @moduledoc false
   use ExUnit.Case
 
   setup_all do
@@ -9,8 +8,7 @@ defmodule LibOss.BucketTest do
       "access_key_secret" => access_key_secret,
       "bucket" => bucket
     } =
-      "./tmp/test.json"
-      |> File.read!()
+      File.read!("./tmp/test.json")
       |> Jason.decode!()
 
     cli =

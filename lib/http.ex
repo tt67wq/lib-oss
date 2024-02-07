@@ -5,32 +5,24 @@ defmodule LibOss.Http do
   alias LibOss.Exception
   alias LibOss.Typespecs
 
-  @type t :: atom()
+  @type t :: struct()
 
-  @callback do_request(req :: LibOss.Http.Request.t()) ::
+  @callback new(Typespecs.opts()) :: t()
+  @callback start_link(http: t()) :: Typespecs.on_start()
+  @callback do_request(
+              http :: t(),
+              req :: LibOss.Http.Request.t()
+            ) ::
               {:ok, LibOss.Http.Response.t()} | {:error, Exception.t()}
 
-  @callback start_link(opts :: keyword()) :: {:ok, pid()} | {:error, Exception.t()}
-
-  defp delegate(impl, func, args), do: apply(impl, func, args)
+  defp delegate(%module{} = http, func, args), do: apply(module, func, [http | args])
 
   @spec do_request(t(), LibOss.Http.Request.t()) ::
           {:ok, LibOss.Http.Response.t()} | {:error, Exception.t()}
   def do_request(http, req), do: delegate(http, :do_request, [req])
 
-  @spec start_link(t(), keyword()) :: {:ok, pid()} | {:error, Exception.t()}
-  def start_link(http, opts), do: delegate(http, :start_link, [opts])
-
-  defmacro __using__(_) do
-    quote do
-      @behaviour LibOss.Http
-
-      def do_request(http, req), do: raise("Not implemented")
-
-      def start_link(opts), do: raise("Not implemented")
-
-      defoverridable(do_request: 2, start_link: 1)
-    end
+  def start_link(%module{} = http) do
+    apply(module, :start_link, [[http: http]])
   end
 end
 
@@ -194,15 +186,28 @@ defmodule LibOss.Http.Default do
   Implement LibOss.Http behavior with Finch
   """
 
-  use LibOss.Http
+  @behaviour LibOss.Http
 
   alias LibOss.Exception
   alias LibOss.Http
 
   require Logger
 
+  # types
+  @type t :: %__MODULE__{
+          name: atom()
+        }
+
+  defstruct name: __MODULE__
+
   @impl Http
-  def do_request(req) do
+  def new(opts \\ []) do
+    opts = Keyword.put_new(opts, :name, __MODULE__)
+    struct(__MODULE__, opts)
+  end
+
+  @impl Http
+  def do_request(http, req) do
     opts = opts(req.opts)
 
     with {debug?, opts} <- Keyword.pop(opts, :debug) do
@@ -228,7 +233,7 @@ defmodule LibOss.Http.Default do
       end
 
       finch_req
-      |> Finch.request(__MODULE__)
+      |> Finch.request(http.name)
       |> case do
         {:ok, %Finch.Response{status: status, body: body, headers: headers}}
         when status in 200..299 ->
@@ -247,17 +252,14 @@ defmodule LibOss.Http.Default do
   defp opts(nil), do: [receive_timeout: 5000]
   defp opts(options), do: Keyword.put_new(options, :receive_timeout, 5000)
 
-  def child_spec(_opts) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, []}
-    }
+  def child_spec(opts) do
+    http = Keyword.fetch!(opts, :http)
+    %{id: {__MODULE__, http.name}, start: {__MODULE__, :start_link, [opts]}}
   end
 
   @impl Http
-  def start_link(_opts) do
-    Finch.start_link(name: __MODULE__)
+  def start_link(opts) do
+    {http, _opts} = Keyword.pop!(opts, :http)
+    Finch.start_link(name: http.name)
   end
-
-  def start_link, do: start_link([])
 end
