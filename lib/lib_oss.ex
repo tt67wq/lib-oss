@@ -31,9 +31,9 @@ defmodule LibOss do
       required: true
     ],
     http_impl: [
-      type: :any,
+      type: :atom,
       doc: "HTTP client implementation of `LibOss.Http`",
-      default: LibOss.Http.Default.new()
+      default: LibOss.Http.Default
     ]
   ]
 
@@ -78,8 +78,8 @@ defmodule LibOss do
     %{id: {__MODULE__, client.name}, start: {__MODULE__, :start_link, [opts]}}
   end
 
-  def start_link(client: client) do
-    LibOss.Http.start_link(client.http_impl)
+  def start_link(client: %__MODULE__{http_impl: http_impl}) do
+    LibOss.Http.start_link(http_impl, [])
   end
 
   @spec request(t(), LibOss.Request.t()) :: {:ok, LibOss.Http.Response.t()} | {:error, Exception.t()}
