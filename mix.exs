@@ -3,7 +3,7 @@ defmodule LibOss.MixProject do
   use Mix.Project
 
   @name "lib_oss"
-  @version "0.1.1"
+  @version "0.1.2"
   @repo_url "https://github.com/tt67wq/lib-oss"
   @description "A Elixir port SDK for Aliyun OSS"
 
