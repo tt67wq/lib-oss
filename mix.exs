@@ -13,6 +13,7 @@ defmodule LibOss.MixProject do
       version: @version,
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       source_url: @repo_url,
       name: @name,
@@ -51,4 +52,7 @@ defmodule LibOss.MixProject do
       }
     ]
   end
+
+  defp elixirc_paths(env) when env in ~w(test)a, do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 end

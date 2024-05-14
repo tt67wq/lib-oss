@@ -3,6 +3,7 @@ defmodule LibOss.Typespecs do
   some typespecs
   """
 
+  @type name :: atom() | {:global, term()} | {:via, module(), term()}
   @type opts :: keyword()
   @type host :: String.t()
   @type method :: :get | :post | :head | :patch | :delete | :options | :put
@@ -15,9 +16,9 @@ defmodule LibOss.Typespecs do
           | :ignore
           | {:error, {:already_started, pid()} | term()}
 
-  @type string_dict :: %{bitstring() => any()}
-  @type bucket :: bitstring()
-  @type object :: bitstring()
-  @type acl :: bitstring()
-  @type access_point_name :: bitstring()
+  @type dict :: %{binary() => any()}
+  @type bucket :: binary()
+  @type object :: binary()
+  @type acl :: binary()
+  @type access_point_name :: binary()
 end

@@ -1,16 +1,8 @@
-defmodule LibOss.Utils do
+defmodule LibOss.Debug do
   @moduledoc """
-  utils
+  Debug tools
   """
-
   require Logger
-
-  @spec do_sign(bitstring(), bitstring()) :: binary()
-  def do_sign(string_to_sign, key) do
-    :hmac
-    |> :crypto.mac(:sha, key, string_to_sign)
-    |> Base.encode64()
-  end
 
   def debug(msg), do: tap(msg, fn msg -> Logger.debug("[DEBUGING!!!!] => #{inspect(msg)}") end)
 
