@@ -21,4 +21,7 @@ defmodule LibOss.Typespecs do
   @type object :: binary()
   @type acl :: binary()
   @type access_point_name :: binary()
+  @type upload_id :: binary()
+  @type part_num :: non_neg_integer()
+  @type etag :: binary()
 end

@@ -263,6 +263,90 @@ defmodule LibOss do
         delegate(:get_object_acl, [bucket, object])
       end
 
+      @doc """
+      调用PutSymlink接口用于为OSS的目标文件（TargetObject）创建软链接（Symlink）
+
+      Doc: https://help.aliyun.com/document_detail/45126.html
+
+      ## Examples
+
+          iex> put_symlink(bucket, "/test/test.txt", "/test/test_symlink.txt")
+          :ok
+      """
+      @spec put_symlink(Typespecs.bucket(), Typespecs.object(), String.t(), Typespecs.headers()) ::
+              :ok | err_t()
+      def put_symlink(bucket, object, target_object, headers \\ []) do
+        delegate(:put_symlink, [bucket, object, target_object, headers])
+      end
+
+      @doc """
+      调用GetSymlink接口获取软链接。
+
+      Doc: https://help.aliyun.com/document_detail/45146.html
+
+      ## Examples
+
+          iex> get_symlink(bucket, "/test/test.txt")
+          {:ok, "/test/test_symlink.txt"}
+      """
+      @spec get_symlink(Typespecs.bucket(), Typespecs.object()) ::
+              {:ok, binary()} | err_t()
+      def get_symlink(bucket, object) do
+        delegate(:get_symlink, [bucket, object])
+      end
+
+      @doc """
+      调用PutObjectTagging接口设置或更新对象（Object）的标签（Tagging）信息。
+
+      Doc: https://help.aliyun.com/document_detail/114855.html
+
+      ## Examples
+
+          iex> put_object_tagging(bucket, "/test/test.txt", %{"key1" => "value1", "key2" => "value2"})
+          :ok
+      """
+      @spec put_object_tagging(Typespecs.bucket(), Typespecs.object(), Typespecs.tags()) ::
+              :ok | err_t()
+      def put_object_tagging(bucket, object, tags) do
+        delegate(:put_object_tagging, [bucket, object, tags])
+      end
+
+      @doc """
+      调用GetObjectTagging接口获取对象（Object）的标签（Tagging）信息。
+
+      Doc: https://help.aliyun.com/document_detail/114878.html
+
+      ## Examples
+
+          iex> get_object_tagging(bucket, "/test/test.txt")
+          {:ok,
+           [
+             %{"Key" => "key1", "Value" => "value1"},
+             %{"Key" => "key2", "Value" => "value2"}
+           ]}
+      """
+      @spec get_object_tagging(Typespecs.bucket(), Typespecs.object()) ::
+              {:ok, Typespecs.dict()} | err_t()
+      def get_object_tagging(bucket, object) do
+        delegate(:get_object_tagging, [bucket, object])
+      end
+
+      @doc """
+      删除Object当前版本的标签信息。
+
+      Doc: https://help.aliyun.com/document_detail/114879.html
+
+      ## Examples
+
+          iex> delete_object_tagging(bucket, "/test/test.txt")
+          :ok
+      """
+      @spec delete_object_tagging(Typespecs.bucket(), Typespecs.object()) ::
+              :ok | err_t()
+      def delete_object_tagging(bucket, object) do
+        delegate(:delete_object_tagging, [bucket, object])
+      end
+
       # ~~~~~~~~~~~~~~~~~~~~~~~~ bucket operations: https://help.aliyun.com/document_detail/31959.html ~~~~~~~~~~~~~~~~~~~~~~~~
 
       @doc """
@@ -296,653 +380,317 @@ defmodule LibOss do
       def delete_bucket(bucket) do
         delegate(:delete_bucket, [bucket])
       end
+
+      @doc """
+      GetBucket (ListObjects)接口用于列举存储空间（Bucket）中所有文件（Object）的信息。
+
+      Doc: https://help.aliyun.com/document_detail/31965.html
+
+      其中query_params具体细节参考上面链接中`请求参数`部分
+
+      ## Examples
+
+          iex> get_bucket(bucket, %{"prefix" => "test/test"})
+          {:ok, [
+            %{
+             "ETag" => "\"A5D2B2E40EF7EBA1C788697D31C27A78-3\"",
+             "Key" => "test/test.txt",
+             "LastModified" => "2023-07-09T14:41:08.000Z",
+             "Owner" => %{
+               "DisplayName" => "1074124462684153",
+               "ID" => "1074124462684153"
+             },
+             "Size" => "409608",
+             "StorageClass" => "Standard",
+             "Type" => "Multipart"
+           },
+           %{
+             "ETag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
+             "Key" => "test/test_1.txt",
+             "LastModified" => "2023-07-09T14:41:08.000Z",
+             "Owner" => %{
+               "DisplayName" => "1074124462684153",
+               "ID" => "1074124462684153"
+             },
+             "Size" => "11",
+             "StorageClass" => "Standard",
+             "Type" => "Normal"
+           }
+          ]}
+      """
+      @spec get_bucket(Typespecs.bucket(), Typespecs.params()) ::
+              {:ok, list(Typespecs.dict())} | err_t()
+      def get_bucket(bucket, query_params) do
+        delegate(:get_bucket, [bucket, query_params])
+      end
+
+      @doc """
+      ListObjectsV2（GetBucketV2）接口用于列举存储空间（Bucket）中所有文件（Object）的信息。
+
+      Doc: https://help.aliyun.com/document_detail/187544.html
+
+      ## Examples
+
+          iex> list_object_v2(bucket, %{"prefix" => "test/test"})
+          {:ok,
+           [
+             %{
+               "ETag" => "\"A5D2B2E40EF7EBA1C788697D31C27A78-3\"",
+               "Key" => "test/test.txt",
+               "LastModified" => "2023-07-09T14:41:08.000Z",
+               "Owner" => %{
+                 "DisplayName" => "1074124462684153",
+                 "ID" => "1074124462684153"
+               },
+               "Size" => "409608",
+               "StorageClass" => "Standard",
+               "Type" => "Multipart"
+             },
+             %{
+               "ETag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
+               "Key" => "test/test_1.txt",
+               "LastModified" => "2023-07-09T14:41:08.000Z",
+               "Owner" => %{
+                 "DisplayName" => "1074124462684153",
+                 "ID" => "1074124462684153"
+               },
+               "Size" => "11",
+               "StorageClass" => "Standard",
+               "Type" => "Normal"
+             }
+           ]}
+      """
+      @spec list_object_v2(Typespecs.bucket(), Typespecs.params()) ::
+              {:ok, list(Typespecs.dict())} | err_t()
+      def list_object_v2(bucket, query_params) do
+        delegate(:list_object_v2, [bucket, query_params])
+      end
+
+      # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  multipart operations  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      # #### multipart operations: https://help.aliyun.com/document_detail/155825.html
+
+      @doc """
+      使用Multipart Upload模式传输数据前，您必须先调用InitiateMultipartUpload接口来通知OSS初始化一个Multipart Upload事件。
+
+      Doc: https://help.aliyun.com/document_detail/31992.html
+
+      ## Examples
+
+          iex> init_multi_uploads(bucket, "test.txt")
+          {:ok, "upload_id"}
+      """
+      @spec init_multi_upload(
+              Typespecs.bucket(),
+              Typespecs.object(),
+              Typespecs.headers()
+            ) ::
+              {:ok, Typespecs.upload_id()} | err_t()
+      def init_multi_upload(bucket, object, req_headers \\ []) do
+        delegate(:init_multi_upload, [bucket, object, req_headers])
+      end
+
+      @doc """
+      初始化一个MultipartUpload后，调用UploadPart接口根据指定的Object名和uploadId来分块（Part）上传数据。
+
+      Doc: https://help.aliyun.com/document_detail/31993.html
+
+      ## Examples
+
+          iex> upload_part(bucket, "test.txt", "upload_id", 1, "hello world")
+          {:ok, "etag"}
+      """
+      @spec upload_part(
+              Typespecs.bucket(),
+              Typespecs.object(),
+              Typespecs.upload_id(),
+              Typespecs.part_num(),
+              binary()
+            ) ::
+              {:ok, Typespecs.etag()} | err_t()
+      def upload_part(bucket, object, upload_id, part_number, data) do
+        delegate(:upload_part, [bucket, object, upload_id, part_number, data])
+      end
+
+      @doc """
+      调用ListMultipartUploads接口列举所有执行中的Multipart Upload事件，即已经初始化但还未完成（Complete）或者还未中止（Abort）的Multipart Upload事件。
+
+      Doc: https://help.aliyun.com/document_detail/31997.html
+
+      ## Examples
+
+          iex> list_multipart_uploads(bucket, %{"delimiter"=>"/", "max-uploads" => 10, "prefix"=>"test/"})
+          {:ok,
+           [
+             %{
+               "ETag" => "\"1334928900AEB317206CC7EB950540EF-3\"",
+               "Key" => "test/multi-test.txt",
+               "LastModified" => "2023-07-18T11:16:45.000Z",
+               "Owner" => %{
+                 "DisplayName" => "1074124462684153",
+                 "ID" => "1074124462684153"
+               },
+               "Size" => "409608",
+               "StorageClass" => "Standard",
+               "Type" => "Multipart"
+             },
+             %{
+               "ETag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
+               "Key" => "test/test.txt",
+               "LastModified" => "2023-07-18T11:19:19.000Z",
+               "Owner" => %{
+                 "DisplayName" => "1074124462684153",
+                 "ID" => "1074124462684153"
+               },
+               "Size" => "11",
+               "StorageClass" => "Standard",
+               "Type" => "Normal"
+             }
+           ]}
+      """
+      @spec list_multipart_uploads(Typespecs.bucket(), Typespecs.params()) ::
+              {:ok, list(Typespecs.dict())} | err_t()
+      def list_multipart_uploads(bucket, query_params) do
+        delegate(:list_multipart_uploads, [bucket, query_params])
+      end
+
+      @doc """
+      所有数据Part都上传完成后，您必须调用CompleteMultipartUpload接口来完成整个文件的分片上传。
+
+      Doc: https://help.aliyun.com/document_detail/31995.html
+
+      ## Examples
+
+          iex> {:ok, etag1} = upload_part(bucket, "test.txt", "upload_id", 1, part1)
+          iex> {:ok, etag2} = upload_part(bucket, "test.txt", "upload_id", 2, part2)
+          iex> {:ok, etag3} = upload_part(bucket, "test.txt", "upload_id", 3, part3)
+          iex> complete_multipart_upload(bucket, "test.txt", "upload_id", [{1, etag1}, {2, etag2}, {3, etag3}])
+          :ok
+      """
+      @spec complete_multipart_upload(
+              Typespecs.bucket(),
+              Typespecs.object(),
+              Typespecs.upload_id(),
+              [{Typespecs.part_num(), Typespecs.etag()}],
+              Typespecs.headers()
+            ) :: :ok | err_t()
+      def complete_multipart_upload(bucket, object, upload_id, parts, headers \\ []) do
+        delegate(:complete_multipart_upload, [bucket, object, upload_id, parts, headers])
+      end
+
+      @doc """
+      AbortMultipartUpload接口用于取消MultipartUpload事件并删除对应的Part数据。
+
+      Doc: https://help.aliyun.com/document_detail/31996.html
+
+      ## Examples
+
+          iex> abort_multipart_upload(bucket, "test.txt", "upload_id")
+          :ok
+      """
+      @spec abort_multipart_upload(
+              Typespecs.bucket(),
+              Typespecs.object(),
+              Typespecs.upload_id()
+            ) :: :ok | err_t()
+      def abort_multipart_upload(bucket, object, upload_id) do
+        delegate(:abort_multipart_upload, [bucket, object, upload_id])
+      end
+
+      @doc """
+      ListParts接口用于列举指定Upload ID所属的所有已经上传成功Part。
+
+      Doc: https://help.aliyun.com/document_detail/31998.html
+
+      ## Examples
+
+          iex> list_parts(bucket, "test.txt", "upload_id")
+          {:ok,
+           %{
+            "ListPartsResult" => %{
+              "Bucket" => "hope-data",
+              "IsTruncated" => "false",
+              "Key" => "test/multi-test.txt",
+              "MaxParts" => "1000",
+              "NextPartNumberMarker" => "3",
+              "Part" => [
+                %{
+                  "ETag" => "\"3170FC594DACE56C506E0196B5DEA1D1\"",
+                  "HashCrc64ecma" => "10873275732915280589",
+                  "LastModified" => "2023-07-19T02:58:16.000Z",
+                  "PartNumber" => "1",
+                  "Size" => "136536"
+                },
+                %{
+                  "ETag" => "\"5539D60A05FD504B8210A662D7D15C1E\"",
+                  "HashCrc64ecma" => "4592881501542342075",
+                  "LastModified" => "2023-07-19T02:58:17.000Z",
+                  "PartNumber" => "2",
+                  "Size" => "136536"
+                },
+                %{
+                  "ETag" => "\"5C7D509F5744115EE3B2D55F4893FE3F\"",
+                  "HashCrc64ecma" => "9048307046109329978",
+                  "LastModified" => "2023-07-19T02:58:17.000Z",
+                  "PartNumber" => "3",
+                  "Size" => "136536"
+                }
+              ],
+              "PartNumberMarker" => "0",
+              "StorageClass" => "Standard",
+              "UploadId" => "39663F02E9384C87BFC9E9B0E8B1100E"
+            }
+          }}
+      """
+      @spec list_parts(
+              Typespecs.bucket(),
+              Typespecs.object(),
+              Typespecs.upload_id(),
+              Typespecs.params()
+            ) ::
+              {:ok, list(Typespecs.dict())} | err_t()
+      def list_parts(bucket, object, upload_id, query_params \\ %{}) do
+        delegate(:list_parts, [bucket, object, upload_id, query_params])
+      end
+
+      @doc """
+      调用GetBucketInfo接口查看存储空间（Bucket）的相关信息。
+
+      Doc: https://help.aliyun.com/document_detail/31968.html
+
+      ## Examples
+
+          iex> get_bucket_info(bucket)
+          {:ok,
+           %{
+             "Bucket" => %{
+               "AccessControlList" => %{"Grant" => "public-read"},
+               "AccessMonitor" => "Disabled",
+               "BucketPolicy" => %{"LogBucket" => nil, "LogPrefix" => nil},
+               "Comment" => nil,
+               "CreationDate" => "2022-08-02T14:59:56.000Z",
+               "CrossRegionReplication" => "Disabled",
+               "DataRedundancyType" => "LRS",
+               "ExtranetEndpoint" => "oss-cn-shenzhen.aliyuncs.com",
+               "IntranetEndpoint" => "oss-cn-shenzhen-internal.aliyuncs.com",
+               "Location" => "oss-cn-shenzhen",
+               "Name" => "xxxx-data",
+               "Owner" => %{
+                 "DisplayName" => "1074124462684153",
+                 "ID" => "1074124462684153"
+               },
+               "ResourceGroupId" => "rg-acfmv47nudzpp6i",
+               "ServerSideEncryptionRule" => %{"SSEAlgorithm" => "None"},
+               "StorageClass" => "Standard",
+               "TransferAcceleration" => "Enabled"
+             }
+           }}
+      """
+      @spec get_bucket_info(Typespecs.bucket()) :: {:ok, Typespecs.dict()} | err_t()
+      def get_bucket_info(bucket) do
+        delegate(:get_bucket_info, [bucket])
+      end
     end
   end
-
-  # @doc """
-  # 调用PutSymlink接口用于为OSS的目标文件（TargetObject）创建软链接（Symlink）
-
-  # Doc: https://help.aliyun.com/document_detail/45126.html
-
-  # ## Examples
-
-  #     iex> LibOss.put_symlink(cli, bucket, "/test/test.txt", "/test/test_symlink.txt")
-  # """
-  # @spec put_symlink(
-  #         t(),
-  #         Typespecs.bucket(),
-  #         Typespecs.object(),
-  #         Typespecs.object(),
-  #         Typespecs.headers()
-  #       ) :: {:ok, any()} | {:error, Exception.t()}
-  # def put_symlink(client, bucket, object, target_object, headers \\ []) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :put,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       sub_resources: [{"symlink", nil}],
-  #       bucket: bucket,
-  #       headers: [{"x-oss-symlink-target", target_object} | headers]
-  #     )
-
-  #   request(client, req)
-  # end
-
-  # @doc """
-  # 调用GetSymlink接口获取软链接。
-
-  # Doc: https://help.aliyun.com/document_detail/45146.html
-
-  # ## Examples
-
-  #     iex> LibOss.get_symlink(cli, bucket, "/test/test.txt")
-  #     {:ok, "/test/test_symlink.txt"}
-  # """
-  # @spec get_symlink(t(), Typespecs.bucket(), Typespecs.object()) ::
-  #         {:ok, bitstring()} | {:error, Exception.t()}
-  # def get_symlink(client, bucket, object) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :get,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       bucket: bucket,
-  #       sub_resources: [{"symlink", nil}]
-  #     )
-
-  #   client
-  #   |> request(req)
-  #   |> case do
-  #     {:ok, %Http.Response{headers: headers}} ->
-  #       headers
-  #       |> Enum.find(fn {k, _} -> k == "x-oss-symlink-target" end)
-  #       |> then(fn
-  #         {_, v} -> {:ok, URI.decode(v)}
-  #         nil -> Exception.new("x-oss-symlink-target not found")
-  #       end)
-
-  #     err ->
-  #       err
-  #   end
-  # end
-
-  # @doc """
-  # 调用PutObjectTagging接口设置或更新对象（Object）的标签（Tagging）信息。
-
-  # Doc: https://help.aliyun.com/document_detail/114855.html
-
-  # ## Examples
-
-  #     iex> LibOss.put_object_tagging(cli, bucket, "/test/test.txt", %{"key1" => "value1", "key2" => "value2"})
-  # """
-  # @spec put_object_tagging(
-  #         t(),
-  #         Typespecs.bucket(),
-  #         Typespecs.object(),
-  #         Typespecs.string_dict()
-  #       ) :: {:ok, any()} | {:error, Exception.t()}
-  # def put_object_tagging(client, bucket, object, tags) do
-  #   tagging =
-  #     Enum.map(tags, fn {k, v} -> "<Tag><Key>#{k}</Key><Value>#{v}</Value></Tag>" end)
-
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :put,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       sub_resources: [{"tagging", nil}],
-  #       bucket: bucket,
-  #       body: "<Tagging><TagSet>#{tagging}</TagSet></Tagging>"
-  #     )
-
-  #   request(client, req)
-  # end
-
-  # @doc """
-  # 调用GetObjectTagging接口获取对象（Object）的标签（Tagging）信息。
-
-  # Doc: https://help.aliyun.com/document_detail/114878.html
-
-  # ## Examples
-
-  #     iex> LibOss.get_object_tagging(cli, bucket, "/test/test.txt")
-  #     {:ok,
-  #      [
-  #        %{"Key" => "key1", "Value" => "value1"},
-  #        %{"Key" => "key2", "Value" => "value2"}
-  #      ]}
-  # """
-  # @spec get_object_tagging(t(), Typespecs.bucket(), Typespecs.object()) ::
-  #         {:ok, [Typespecs.string_dict()]} | {:error, Exception.t()}
-  # def get_object_tagging(client, bucket, object) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :get,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       bucket: bucket,
-  #       sub_resources: [{"tagging", nil}]
-  #     )
-
-  #   client
-  #   |> request(req)
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       body
-  #       |> XmlToMap.naive_map()
-  #       |> case do
-  #         %{"Tagging" => %{"TagSet" => %{"Tag" => tags}}} ->
-  #           {:ok, tags}
-
-  #         _ ->
-  #           {:error, Exception.new("invalid response", body)}
-  #       end
-
-  #     err ->
-  #       err
-  #   end
-  # end
-
-  # @doc """
-  # 删除Object当前版本的标签信息。
-
-  # Doc: https://help.aliyun.com/document_detail/114879.html
-
-  # ## Examples
-
-  #     iex> LibOss.delete_object_tagging(cli, bucket, "/test/test.txt")
-  # """
-  # @spec delete_object_tagging(t(), Typespecs.bucket(), Typespecs.object()) ::
-  #         {:ok, any()} | {:error, Exception.t()}
-  # def delete_object_tagging(client, bucket, object) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :delete,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       bucket: bucket,
-  #       sub_resources: [{"tagging", nil}]
-  #     )
-
-  #   request(client, req)
-  # end
-
-  # #### multipart operations: https://help.aliyun.com/document_detail/155825.html
-
-  # @doc """
-  # 使用Multipart Upload模式传输数据前，您必须先调用InitiateMultipartUpload接口来通知OSS初始化一个Multipart Upload事件。
-
-  # Doc: https://help.aliyun.com/document_detail/31992.html
-
-  # ## Examples
-
-  #     iex> init_multi_uploads(client, bucket, "test.txt")
-  #     {:ok, "upload_id"}
-  # """
-  # @spec init_multi_upload(
-  #         t(),
-  #         Typespecs.bucket(),
-  #         Typespecs.object(),
-  #         Typespecs.headers()
-  #       ) :: {:ok, String.t()} | {:error, Exception.t()}
-  # def init_multi_upload(client, bucket, object, req_headers \\ []) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :post,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       bucket: bucket,
-  #       headers: req_headers,
-  #       sub_resources: [{"uploads", nil}]
-  #     )
-
-  #   client
-  #   |> request(req)
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       body
-  #       |> XmlToMap.naive_map()
-  #       |> case do
-  #         %{"InitiateMultipartUploadResult" => %{"UploadId" => upload_id}} ->
-  #           {:ok, upload_id}
-
-  #         _ ->
-  #           {:error, Exception.new("invalid response", body)}
-  #       end
-
-  #     err ->
-  #       err
-  #   end
-  # end
-
-  # @doc """
-  # 初始化一个MultipartUpload后，调用UploadPart接口根据指定的Object名和uploadId来分块（Part）上传数据。
-
-  # Doc: https://help.aliyun.com/document_detail/31993.html
-
-  # ## Examples
-
-  #     iex> upload_part(client, bucket, "test.txt", "upload_id", 1, "hello world")
-  #     {:ok, "etag"}
-  # """
-  # @spec upload_part(
-  #         t(),
-  #         Typespecs.bucket(),
-  #         Typespecs.object(),
-  #         String.t(),
-  #         non_neg_integer(),
-  #         binary()
-  #       ) :: {:ok, bitstring()} | {:error, Exception.t()}
-  # def upload_part(client, bucket, object, upload_id, partNumber, data) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :put,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       sub_resources: [{"partNumber", "#{partNumber}"}, {"uploadId", upload_id}],
-  #       bucket: bucket,
-  #       body: data
-  #     )
-
-  #   client
-  #   |> request(req)
-  #   |> case do
-  #     {:ok, %Http.Response{headers: headers}} ->
-  #       headers
-  #       |> Enum.find(fn {k, _} -> k == "etag" end)
-  #       |> then(fn
-  #         {_, v} -> {:ok, v}
-  #         nil -> {:error, Exception.new("etag not found")}
-  #       end)
-  #   end
-  # end
-
-  # @doc """
-  # 调用ListMultipartUploads接口列举所有执行中的Multipart Upload事件，即已经初始化但还未完成（Complete）或者还未中止（Abort）的Multipart Upload事件。
-
-  # Doc: https://help.aliyun.com/document_detail/31997.html
-
-  # ## Examples
-
-  #     iex> list_multipart_uploads(client, bucket, %{"delimiter"=>"/", "max-uploads" => 10, "prefix"=>"test/"})
-  #     {:ok,
-  #      [
-  #        %{
-  #          "ETag" => "\"1334928900AEB317206CC7EB950540EF-3\"",
-  #          "Key" => "test/multi-test.txt",
-  #          "LastModified" => "2023-07-18T11:16:45.000Z",
-  #          "Owner" => %{
-  #            "DisplayName" => "1074124462684153",
-  #            "ID" => "1074124462684153"
-  #          },
-  #          "Size" => "409608",
-  #          "StorageClass" => "Standard",
-  #          "Type" => "Multipart"
-  #        },
-  #        %{
-  #          "ETag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
-  #          "Key" => "test/test.txt",
-  #          "LastModified" => "2023-07-18T11:19:19.000Z",
-  #          "Owner" => %{
-  #            "DisplayName" => "1074124462684153",
-  #            "ID" => "1074124462684153"
-  #          },
-  #          "Size" => "11",
-  #          "StorageClass" => "Standard",
-  #          "Type" => "Normal"
-  #        }
-  #      ]}
-  # """
-  # @spec list_multipart_uploads(
-  #         t(),
-  #         Typespecs.bucket(),
-  #         Typespecs.params()
-  #       ) :: {:ok, [Typespecs.string_dict()]} | {:error, Exception.t()}
-  # def list_multipart_uploads(client, bucket, query_params) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :get,
-  #       object: "?uploads",
-  #       resource: Path.join(["/", bucket]) <> "/",
-  #       bucket: bucket,
-  #       params: query_params
-  #     )
-
-  #   client
-  #   |> request(req)
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       body
-  #       |> XmlToMap.naive_map()
-  #       |> case do
-  #         %{"ListBucketResult" => %{"Contents" => ret}} ->
-  #           {:ok, ret}
-
-  #         _ ->
-  #           {:error, Exception.new("invalid response", body)}
-  #       end
-
-  #     err ->
-  #       err
-  #   end
-  # end
-
-  # @doc """
-  # AbortMultipartUpload接口用于取消MultipartUpload事件并删除对应的Part数据。
-
-  # Doc: https://help.aliyun.com/document_detail/31996.html
-
-  # ## Examples
-
-  #     {:ok, return_value} = function_name()
-  # """
-  # @spec abort_multipart_upload(
-  #         t(),
-  #         Typespecs.bucket(),
-  #         Typespecs.object(),
-  #         String.t()
-  #       ) :: {:ok, any()} | {:error, Exception.t()}
-  # def abort_multipart_upload(client, bucket, object, upload_id) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :delete,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       sub_resources: [{"uploadId", upload_id}],
-  #       bucket: bucket
-  #     )
-
-  #   request(client, req)
-  # end
-
-  # @doc """
-  # 所有数据Part都上传完成后，您必须调用CompleteMultipartUpload接口来完成整个文件的分片上传。
-
-  # Doc: https://help.aliyun.com/document_detail/31995.html
-
-  # ## Examples
-
-  #     iex> {:ok, etag1} = upload_part(client, bucket, "test.txt", "upload_id", 1, part1)
-  #     iex> {:ok, etag2} = upload_part(client, bucket, "test.txt", "upload_id", 2, part2)
-  #     iex> {:ok, etag3} = upload_part(client, bucket, "test.txt", "upload_id", 3, part3)
-  #     iex> complete_multipart_upload(client, bucket, "test.txt", "upload_id", [{1, etag1}, {2, etag2}, {3, etag3}])
-  #     {:ok, _}
-  # """
-  # @spec complete_multipart_upload(
-  #         t(),
-  #         Typespecs.bucket(),
-  #         Typespecs.object(),
-  #         String.t(),
-  #         [{non_neg_integer(), bitstring()}],
-  #         Typespecs.headers()
-  #       ) :: {:ok, any()} | {:error, Exception.t()}
-  # def complete_multipart_upload(client, bucket, object, upload_id, parts, headers \\ []) do
-  #   # format parts
-  #   body =
-  #     Enum.map_join(parts, "", fn {part_number, etag} ->
-  #       "<Part><PartNumber>#{part_number}</PartNumber><ETag>#{etag}</ETag></Part>"
-  #     end)
-
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :post,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       sub_resources: [{"uploadId", upload_id}],
-  #       bucket: bucket,
-  #       body: "<CompleteMultipartUpload>#{body}</CompleteMultipartUpload>",
-  #       headers: headers
-  #     )
-
-  #   request(client, req)
-  # end
-
-  # @doc """
-  # ListParts接口用于列举指定Upload ID所属的所有已经上传成功Part。
-
-  # Doc: https://help.aliyun.com/document_detail/31998.html
-
-  # ## Examples
-
-  #     {:ok, return_value} = function_name()
-  #     iex> LibOss.list_parts(cli, bucket, "test.txt", "upload_id")
-  #     {:ok,
-  #      %{
-  #       "ListPartsResult" => %{
-  #         "Bucket" => "hope-data",
-  #         "IsTruncated" => "false",
-  #         "Key" => "test/multi-test.txt",
-  #         "MaxParts" => "1000",
-  #         "NextPartNumberMarker" => "3",
-  #         "Part" => [
-  #           %{
-  #             "ETag" => "\"3170FC594DACE56C506E0196B5DEA1D1\"",
-  #             "HashCrc64ecma" => "10873275732915280589",
-  #             "LastModified" => "2023-07-19T02:58:16.000Z",
-  #             "PartNumber" => "1",
-  #             "Size" => "136536"
-  #           },
-  #           %{
-  #             "ETag" => "\"5539D60A05FD504B8210A662D7D15C1E\"",
-  #             "HashCrc64ecma" => "4592881501542342075",
-  #             "LastModified" => "2023-07-19T02:58:17.000Z",
-  #             "PartNumber" => "2",
-  #             "Size" => "136536"
-  #           },
-  #           %{
-  #             "ETag" => "\"5C7D509F5744115EE3B2D55F4893FE3F\"",
-  #             "HashCrc64ecma" => "9048307046109329978",
-  #             "LastModified" => "2023-07-19T02:58:17.000Z",
-  #             "PartNumber" => "3",
-  #             "Size" => "136536"
-  #           }
-  #         ],
-  #         "PartNumberMarker" => "0",
-  #         "StorageClass" => "Standard",
-  #         "UploadId" => "39663F02E9384C87BFC9E9B0E8B1100E"
-  #       }
-  #     }}
-  # """
-  # @spec list_parts(
-  #         t(),
-  #         Typespecs.bucket(),
-  #         Typespecs.object(),
-  #         String.t(),
-  #         Typespecs.params()
-  #       ) :: {:ok, Typespecs.string_dict()} | {:error, Exception.t()}
-  # def list_parts(client, bucket, object, upload_id, query_params \\ %{}) do
-  #   req =
-  #     LibOss.Request.new(
-  #       method: :get,
-  #       object: object,
-  #       resource: Path.join(["/", bucket, object]),
-  #       sub_resources: [{"uploadId", upload_id}],
-  #       bucket: bucket,
-  #       params: query_params
-  #     )
-
-  #   client
-  #   |> request(req)
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       {:ok, XmlToMap.naive_map(body)}
-
-  #     err ->
-  #       err
-  #   end
-  # end
-
-  # @doc """
-  # GetBucket (ListObjects)接口用于列举存储空间（Bucket）中所有文件（Object）的信息。
-
-  # Doc: https://help.aliyun.com/document_detail/31965.html
-
-  # 其中query_params具体细节参考上面链接中`请求参数`部分
-
-  # ## Examples
-
-  #     iex> LibOss.get_bucket(cli, bucket, %{"prefix" => "test/test"})
-  #     {:ok, [
-  #       %{
-  #        "ETag" => "\"A5D2B2E40EF7EBA1C788697D31C27A78-3\"",
-  #        "Key" => "test/test.txt",
-  #        "LastModified" => "2023-07-09T14:41:08.000Z",
-  #        "Owner" => %{
-  #          "DisplayName" => "1074124462684153",
-  #          "ID" => "1074124462684153"
-  #        },
-  #        "Size" => "409608",
-  #        "StorageClass" => "Standard",
-  #        "Type" => "Multipart"
-  #      },
-  #      %{
-  #        "ETag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
-  #        "Key" => "test/test_1.txt",
-  #        "LastModified" => "2023-07-09T14:41:08.000Z",
-  #        "Owner" => %{
-  #          "DisplayName" => "1074124462684153",
-  #          "ID" => "1074124462684153"
-  #        },
-  #        "Size" => "11",
-  #        "StorageClass" => "Standard",
-  #        "Type" => "Normal"
-  #      }
-  #     ]}
-  # """
-  # @spec get_bucket(t(), Typespecs.bucket(), Typespecs.params()) ::
-  #         {:ok, [any()]} | {:error, Exception.t()}
-  # def get_bucket(client, bucket, query_params) do
-  #   [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", params: query_params]
-  #   |> LibOss.Request.new()
-  #   |> then(&request(client, &1))
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       body
-  #       |> XmlToMap.naive_map()
-  #       |> case do
-  #         %{"ListBucketResult" => %{"Contents" => ret}} ->
-  #           {:ok, ret}
-
-  #         _ ->
-  #           {:error, Exception.new("invalid response", body)}
-  #       end
-
-  #     err ->
-  #       err
-  #   end
-  # end
-
-  # @doc """
-  # ListObjectsV2（GetBucketV2）接口用于列举存储空间（Bucket）中所有文件（Object）的信息。
-
-  # Doc: https://help.aliyun.com/document_detail/187544.html
-
-  # ## Examples
-
-  #     iex> LibOss.list_object_v2(cli, bucket, %{"prefix" => "test/test"})
-  #     {:ok,
-  #      [
-  #        %{
-  #          "ETag" => "\"A5D2B2E40EF7EBA1C788697D31C27A78-3\"",
-  #          "Key" => "test/test.txt",
-  #          "LastModified" => "2023-07-09T14:41:08.000Z",
-  #          "Owner" => %{
-  #            "DisplayName" => "1074124462684153",
-  #            "ID" => "1074124462684153"
-  #          },
-  #          "Size" => "409608",
-  #          "StorageClass" => "Standard",
-  #          "Type" => "Multipart"
-  #        },
-  #        %{
-  #          "ETag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
-  #          "Key" => "test/test_1.txt",
-  #          "LastModified" => "2023-07-09T14:41:08.000Z",
-  #          "Owner" => %{
-  #            "DisplayName" => "1074124462684153",
-  #            "ID" => "1074124462684153"
-  #          },
-  #          "Size" => "11",
-  #          "StorageClass" => "Standard",
-  #          "Type" => "Normal"
-  #        }
-  #      ]}
-  # """
-  # @spec list_object_v2(t(), Typespecs.bucket(), Typespecs.params()) ::
-  #         {:ok, [any()]} | {:error, Exception.t()}
-  # def list_object_v2(client, bucket, query_params) do
-  #   [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", params: Map.put(query_params, "list-type", "2")]
-  #   |> LibOss.Request.new()
-  #   |> then(&request(client, &1))
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       ret =
-  #         body
-  #         |> XmlToMap.naive_map()
-  #         |> case do
-  #           %{"ListBucketResult" => %{"Contents" => ret}} -> {:ok, ret}
-  #           _ -> {:error, Exception.new("invalid response", body)}
-  #         end
-
-  #       {:ok, ret}
-
-  #     err ->
-  #       err
-  #   end
-  # end
-
-  # @doc """
-  # 调用GetBucketInfo接口查看存储空间（Bucket）的相关信息。
-
-  # Doc: https://help.aliyun.com/document_detail/31968.html
-
-  # ## Examples
-
-  #     iex> LibOss.get_bucket_info(cli, bucket)
-  #     {:ok,
-  #      %{
-  #        "Bucket" => %{
-  #          "AccessControlList" => %{"Grant" => "public-read"},
-  #          "AccessMonitor" => "Disabled",
-  #          "BucketPolicy" => %{"LogBucket" => nil, "LogPrefix" => nil},
-  #          "Comment" => nil,
-  #          "CreationDate" => "2022-08-02T14:59:56.000Z",
-  #          "CrossRegionReplication" => "Disabled",
-  #          "DataRedundancyType" => "LRS",
-  #          "ExtranetEndpoint" => "oss-cn-shenzhen.aliyuncs.com",
-  #          "IntranetEndpoint" => "oss-cn-shenzhen-internal.aliyuncs.com",
-  #          "Location" => "oss-cn-shenzhen",
-  #          "Name" => "xxxx-data",
-  #          "Owner" => %{
-  #            "DisplayName" => "1074124462684153",
-  #            "ID" => "1074124462684153"
-  #          },
-  #          "ResourceGroupId" => "rg-acfmv47nudzpp6i",
-  #          "ServerSideEncryptionRule" => %{"SSEAlgorithm" => "None"},
-  #          "StorageClass" => "Standard",
-  #          "TransferAcceleration" => "Enabled"
-  #        }
-  #      }}
-  # """
-  # @spec get_bucket_info(t(), Typespecs.bucket()) :: {:ok, any()} | {:error, Exception.t()}
-  # def get_bucket_info(client, bucket) do
-  #   [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", sub_resources: [{"bucketInfo", nil}]]
-  #   |> LibOss.Request.new()
-  #   |> then(&request(client, &1))
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       body
-  #       |> XmlToMap.naive_map()
-  #       |> case do
-  #         %{"BucketInfo" => ret} -> {:ok, ret}
-  #         _ -> {:error, Exception.new("invalid response", body)}
-  #       end
-
-  #     err ->
-  #       err
-  #   end
-  # end
 
   # @doc """
   # GetBucketLocation接口用于查看存储空间（Bucket）的位置信息。
