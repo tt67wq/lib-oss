@@ -271,7 +271,7 @@ defmodule LibOss.Core do
     end
   end
 
-  @spec put_object_acl(module(), Typespecs.bucket(), Typespecs.object(), String.t()) :: :ok | err_t()
+  @spec put_object_acl(module(), Typespecs.bucket(), Typespecs.object(), Typespecs.acl()) :: :ok | err_t()
   def put_object_acl(name, bucket, object, acl) do
     config = get(name)
 
@@ -292,7 +292,7 @@ defmodule LibOss.Core do
   end
 
   @spec get_object_acl(module(), Typespecs.bucket(), Typespecs.object()) ::
-          {:ok, binary()} | err_t()
+          {:ok, Typespecs.acl()} | err_t()
   def get_object_acl(name, bucket, object) do
     config = get(name)
 
@@ -693,6 +693,88 @@ defmodule LibOss.Core do
       |> XmlToMap.naive_map()
       |> case do
         %{"BucketInfo" => ret} -> {:ok, ret}
+        _ -> {:error, Exception.new("invalid response", body)}
+      end
+    end
+  end
+
+  @spec get_bucket_location(module(), Typespecs.bucket()) :: {:ok, String.t()} | err_t()
+  def get_bucket_location(name, bucket) do
+    config = get(name)
+
+    req = %Request{
+      method: :get,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      sub_resources: [{"location", nil}]
+    }
+
+    with {:ok, %Http.Response{body: body}} <- call(config, req) do
+      body
+      |> XmlToMap.naive_map()
+      |> case do
+        %{"LocationConstraint" => ret} -> {:ok, ret}
+        _ -> {:error, Exception.new("invalid response", body)}
+      end
+    end
+  end
+
+  @spec get_bucket_stat(module(), Typespecs.bucket()) :: {:ok, Typespecs.dict()} | err_t()
+  def get_bucket_stat(name, bucket) do
+    config = get(name)
+
+    req = %Request{
+      method: :get,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      sub_resources: [{"stat", nil}]
+    }
+
+    with {:ok, %Http.Response{body: body}} <- call(config, req) do
+      body
+      |> XmlToMap.naive_map()
+      |> case do
+        %{"BucketStat" => ret} -> {:ok, ret}
+        _ -> {:error, Exception.new("invalid response", body)}
+      end
+    end
+  end
+
+  @spec put_bucket_acl(module(), Typespecs.bucket(), Typespecs.acl()) :: :ok | err_t()
+  def put_bucket_acl(name, bucket, acl) do
+    unless acl in ["private", "public-read", "public-read-write"] do
+      raise ArgumentError, "invalid acl: #{acl}"
+    end
+
+    config = get(name)
+
+    req = %Request{
+      method: :put,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      sub_resources: [{"acl", nil}],
+      headers: [{"x-oss-acl", acl}]
+    }
+
+    with {:ok, _} <- call(config, req), do: :ok
+  end
+
+  @spec get_bucket_acl(module(), Typespecs.bucket()) :: {:ok, Typespecs.dict()} | err_t()
+  def get_bucket_acl(name, bucket) do
+    config = get(name)
+
+    req = %Request{
+      method: :get,
+      bucket: bucket,
+      resource: "/" <> bucket <> "/",
+      sub_resources: [{"acl", nil}]
+    }
+
+    with {:ok, %Http.Response{body: body}} <- call(config, req) do
+      body
+      |> XmlToMap.naive_map()
+      |> case do
+        %{"AccessControlPolicy" => ret} -> {:ok, ret}
         _ -> {:error, Exception.new("invalid response", body)}
       end
     end

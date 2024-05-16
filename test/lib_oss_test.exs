@@ -205,9 +205,25 @@ defmodule LibOss.LibOssTest do
     assert :ok == App.delete_bucket(bucket)
   end
 
-  @tag exec: true
   test "get_bucket_info", %{bucket: bucket} do
     assert {:ok, res} = App.get_bucket_info(bucket)
+    Debug.debug(res)
+  end
+
+  test "get_bucket_location", %{bucket: bucket} do
+    assert {:ok, res} = App.get_bucket_location(bucket)
+    Debug.debug(res)
+  end
+
+  test "get_bucket_stat", %{bucket: bucket} do
+    assert {:ok, res} = App.get_bucket_stat(bucket)
+    Debug.debug(res)
+  end
+
+  # @tag exec: true
+  test "bucket acl", %{bucket: bucket} do
+    assert :ok == App.put_bucket_acl(bucket, "public-read")
+    assert {:ok, res} = App.get_bucket_acl(bucket)
     Debug.debug(res)
   end
 end

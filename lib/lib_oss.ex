@@ -689,152 +689,95 @@ defmodule LibOss do
       def get_bucket_info(bucket) do
         delegate(:get_bucket_info, [bucket])
       end
+
+      @doc """
+      GetBucketLocation接口用于查看存储空间（Bucket）的位置信息。
+
+      Doc: https://help.aliyun.com/document_detail/31967.html
+
+      ## Examples
+
+          iex> get_bucket_location(bucket)
+          {:ok, "oss-cn-shenzhen"}
+      """
+      @spec get_bucket_location(Typespecs.bucket()) :: {:ok, String.t()} | err_t()
+      def get_bucket_location(bucket) do
+        delegate(:get_bucket_location, [bucket])
+      end
+
+      @doc """
+      调用GetBucketStat接口获取指定存储空间（Bucket）的存储容量以及文件（Object）数量。
+
+      Doc: https://help.aliyun.com/document_detail/426056.html
+
+      ## Examples
+
+          iex> get_bucket_stat(bucket)
+          {:ok, {:ok,
+           %{
+             "ArchiveObjectCount" => "0",
+             "ArchiveRealStorage" => "0",
+             "ArchiveStorage" => "0",
+             "ColdArchiveObjectCount" => "0",
+             "ColdArchiveRealStorage" => "0",
+             "ColdArchiveStorage" => "0",
+             "DeepColdArchiveObjectCount" => "0",
+             "DeepColdArchiveRealStorage" => "0",
+             "DeepColdArchiveStorage" => "0",
+             "DeleteMarkerCount" => "0",
+             "InfrequentAccessObjectCount" => "0",
+             "InfrequentAccessRealStorage" => "0",
+             "InfrequentAccessStorage" => "0",
+             "LastModifiedTime" => "1690118142",
+             "LiveChannelCount" => "0",
+             "MultipartPartCount" => "59",
+             "MultipartUploadCount" => "30",
+             "ObjectCount" => "5413",
+             "ReservedCapacityObjectCount" => "0",
+             "ReservedCapacityStorage" => "0",
+             "StandardObjectCount" => "5413",
+             "StandardStorage" => "9619258561",
+             "Storage" => "9619258561"
+           }}
+      """
+      @spec get_bucket_stat(Typespecs.bucket()) :: {:ok, Typespecs.dict()} | err_t()
+      def get_bucket_stat(bucket) do
+        delegate(:get_bucket_stat, [bucket])
+      end
+
+      @doc """
+      PutBucketAcl接口用于设置或修改存储空间（Bucket）的访问权限（ACL）。
+
+      Doc: https://help.aliyun.com/document_detail/31960.html
+
+      ## Examples
+
+          iex> put_bucket_acl(bucket, "public-read")
+          :ok
+      """
+      @spec put_bucket_acl(Typespecs.bucket(), Typespecs.acl()) :: :ok | err_t()
+      def put_bucket_acl(bucket, acl) do
+        delegate(:put_bucket_acl, [bucket, acl])
+      end
+
+      @doc """
+      GetBucketAcl接口用于获取某个存储空间（Bucket）的访问权限（ACL）。
+
+      Doc: https://help.aliyun.com/document_detail/31966.html
+
+      ## Examples
+
+          iex> get_bucket_acl(cli, bucket)
+          {:ok,
+          %{
+             "AccessControlList" => %{"Grant" => "public-read"},
+             "Owner" => %{"DisplayName" => "107412446268415", "ID" => "107412446264153"}
+           }}
+      """
+      @spec get_bucket_acl(Typespecs.bucket()) :: {:ok, Typespecs.acl()} | err_t()
+      def get_bucket_acl(bucket) do
+        delegate(:get_bucket_acl, [bucket])
+      end
     end
   end
-
-  # @doc """
-  # GetBucketLocation接口用于查看存储空间（Bucket）的位置信息。
-
-  # Doc: https://help.aliyun.com/document_detail/31967.html
-
-  # ## Examples
-
-  #     iex> LibOss.get_bucket_location(cli, bucket)
-  #     {:ok, "oss-cn-shenzhen"}
-  # """
-  # @spec get_bucket_location(t(), Typespecs.bucket()) ::
-  #         {:ok, Typespecs.bucket()} | {:error, Exception.t()}
-  # def get_bucket_location(client, bucket) do
-  #   [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", sub_resources: [{"location", nil}]]
-  #   |> LibOss.Request.new()
-  #   |> then(&request(client, &1))
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       body
-  #       |> XmlToMap.naive_map()
-  #       |> case do
-  #         %{"LocationConstraint" => ret} -> {:ok, ret}
-  #         _ -> {:error, Exception.new("invalid response", body)}
-  #       end
-
-  #     err ->
-  #       err
-  #   end
-  # end
-
-  # @doc """
-  # 调用GetBucketStat接口获取指定存储空间（Bucket）的存储容量以及文件（Object）数量。
-
-  # Doc: https://help.aliyun.com/document_detail/426056.html
-
-  # ## Examples
-
-  #     iex> LibOss.get_bucket_stat(cli, bucket)
-  #     {:ok, {:ok,
-  #      %{
-  #        "ArchiveObjectCount" => "0",
-  #        "ArchiveRealStorage" => "0",
-  #        "ArchiveStorage" => "0",
-  #        "ColdArchiveObjectCount" => "0",
-  #        "ColdArchiveRealStorage" => "0",
-  #        "ColdArchiveStorage" => "0",
-  #        "DeepColdArchiveObjectCount" => "0",
-  #        "DeepColdArchiveRealStorage" => "0",
-  #        "DeepColdArchiveStorage" => "0",
-  #        "DeleteMarkerCount" => "0",
-  #        "InfrequentAccessObjectCount" => "0",
-  #        "InfrequentAccessRealStorage" => "0",
-  #        "InfrequentAccessStorage" => "0",
-  #        "LastModifiedTime" => "1690118142",
-  #        "LiveChannelCount" => "0",
-  #        "MultipartPartCount" => "59",
-  #        "MultipartUploadCount" => "30",
-  #        "ObjectCount" => "5413",
-  #        "ReservedCapacityObjectCount" => "0",
-  #        "ReservedCapacityStorage" => "0",
-  #        "StandardObjectCount" => "5413",
-  #        "StandardStorage" => "9619258561",
-  #        "Storage" => "9619258561"
-  #      }}
-  # """
-  # @spec get_bucket_stat(t(), Typespecs.bucket()) ::
-  #         {:ok, Typespecs.string_dict()} | {:error, Exception.t()}
-  # def get_bucket_stat(client, bucket) do
-  #   [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", sub_resources: [{"stat", nil}]]
-  #   |> LibOss.Request.new()
-  #   |> then(&request(client, &1))
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       body
-  #       |> XmlToMap.naive_map()
-  #       |> case do
-  #         %{"BucketStat" => ret} -> {:ok, ret}
-  #         _ -> {:error, Exception.new("invalid response", body)}
-  #       end
-
-  #     err ->
-  #       err
-  #   end
-  # end
-
-  # @doc """
-  # PutBucketAcl接口用于设置或修改存储空间（Bucket）的访问权限（ACL）。
-
-  # Doc: https://help.aliyun.com/document_detail/31960.html
-
-  # ## Examples
-
-  #     iex> LibOss.put_bucket_acl(cli, bucket, "public-read")
-  # """
-  # @spec put_bucket_acl(t(), Typespecs.bucket(), Typespecs.acl()) ::
-  #         {:ok, any()} | {:error, Exception.t()}
-  # def put_bucket_acl(client, bucket, acl) do
-  #   unless acl in ["private", "public-read", "public-read-write"] do
-  #     raise ArgumentError, "invalid acl: #{acl}"
-  #   end
-
-  #   [
-  #     method: :put,
-  #     bucket: bucket,
-  #     resource: "/" <> bucket <> "/",
-  #     sub_resources: [{"acl", nil}],
-  #     headers: [{"x-oss-acl", acl}]
-  #   ]
-  #   |> LibOss.Request.new()
-  #   |> then(&request(client, &1))
-  # end
-
-  # @doc """
-  # GetBucketAcl接口用于获取某个存储空间（Bucket）的访问权限（ACL）。
-
-  # Doc: https://help.aliyun.com/document_detail/31966.html
-
-  # ## Examples
-
-  #     iex> LibOss.get_bucket_acl(cli, bucket)
-  #     {:ok,
-  #     %{
-  #        "AccessControlList" => %{"Grant" => "public-read"},
-  #        "Owner" => %{"DisplayName" => "107412446268415", "ID" => "107412446264153"}
-  #      }}
-  # """
-  # @spec get_bucket_acl(t(), Typespecs.bucket()) ::
-  #         {:ok, Typespecs.string_dict()} | {:error, Exception.t()}
-  # def get_bucket_acl(client, bucket) do
-  #   [method: :get, bucket: bucket, resource: "/" <> bucket <> "/", sub_resources: [{"acl", nil}]]
-  #   |> LibOss.Request.new()
-  #   |> then(&request(client, &1))
-  #   |> case do
-  #     {:ok, %Http.Response{body: body}} ->
-  #       body
-  #       |> XmlToMap.naive_map()
-  #       |> case do
-  #         %{"AccessControlPolicy" => ret} -> {:ok, ret}
-  #         _ -> {:error, Exception.new("invalid response", body)}
-  #       end
-
-  #     err ->
-  #       err
-  #   end
-  # end
 end
