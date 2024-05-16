@@ -89,24 +89,27 @@ Mix.install([
 ])
 
 # 创建一个oss客户端
-cli =
-  LibOss.new(
+defmodule MyOss do
+  use LibOss, otp_app: :my_app
+end
+
+# 配置客户端
+config :my_app, MyOss,
     endpoint: "oss-cn-somewhere.aliyuncs.com",
     access_key_id: "your access key id",
     access_key_secret: "your access key secret"
-  )
 
 # 在superivsor中启动
 Supervisor.start_link(
   [
-    {LibOss, client: cli}
+    MyOss
   ],
   strategy: :one_for_one
 )
 
 # 上传文件
 {:ok, content} = File.read("./test.txt")
-LibOss.put_object(cli, "hope-data", "/test/test.txt", content)
+MyOss.put_object("hope-data", "/test/test.txt", content)
 ```
 
 更多使用方法请参考[API文档](https://hexdocs.pm/lib_oss/LibOss.html)
