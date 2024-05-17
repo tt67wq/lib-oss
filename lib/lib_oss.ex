@@ -305,7 +305,7 @@ defmodule LibOss do
           iex> put_object_tagging(bucket, "/test/test.txt", %{"key1" => "value1", "key2" => "value2"})
           :ok
       """
-      @spec put_object_tagging(Typespecs.bucket(), Typespecs.object(), Typespecs.tags()) ::
+      @spec put_object_tagging(Typespecs.bucket(), Typespecs.object(), Typespecs.dict()) ::
               :ok | err_t()
       def put_object_tagging(bucket, object, tags) do
         delegate(:put_object_tagging, [bucket, object, tags])
