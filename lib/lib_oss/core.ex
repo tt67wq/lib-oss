@@ -646,8 +646,8 @@ defmodule LibOss.Core do
       body
       |> XmlToMap.naive_map()
       |> case do
-        %{"ListBucketResult" => %{"Contents" => ret}} ->
-          {:ok, ret}
+        %{"ListBucketResult" => ret} ->
+          {:ok, Map.get(ret, "Contents", [])}
 
         _ ->
           {:error, Exception.new("invalid response", body)}
@@ -671,7 +671,7 @@ defmodule LibOss.Core do
       body
       |> XmlToMap.naive_map()
       |> case do
-        %{"ListBucketResult" => %{"Contents" => ret}} -> {:ok, ret}
+        %{"ListBucketResult" => ret} -> {:ok, Map.get(ret, "Contents", [])}
         _ -> {:error, Exception.new("invalid response", body)}
       end
     end
