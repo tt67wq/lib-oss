@@ -36,7 +36,7 @@ defmodule LibOss.MixProject do
       {:mime, "~> 2.0"},
       {:jason, "~> 1.4"},
       {:elixir_xml_to_map, "~> 2.0"},
-      {:finch, "~> 0.17"},
+      {:finch, "~> 0.18"},
       {:ex_doc, "~> 0.32", only: :dev, runtime: false},
       {:styler, "~> 0.11", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
