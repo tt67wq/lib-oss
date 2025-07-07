@@ -1,60 +1,52 @@
-.PHONY: build deps.get deps.upgrade compile lint test repl upload clean
+.PHONY: help setup build lint fmt test test.watch repl deps.get deps.update deps.update.all deps.clean deps.compile deps.tree
 
-all: help
+.DEFAULT_GOAL := help
 
-help:
-	@echo "Usage: make <target>"
-	@echo "Targets:"
-	@echo "  build - Build the project"
-	@echo "  deps.get - Install dependencies"
-	@echo "  deps.upgrade - Upgrade dependencies"
-	@echo "  deps.purge - Purge dependencies"
-	@echo "  compile - Compile the project"
-	@echo "  lint - Lint the code"
-	@echo "  test - Run tests"
-	@echo "  repl - Start an interactive Elixir shell"
-	@echo "  upload - Publish the project to Hex"
-	@echo "  clean - Clean the project"
+## 核心指令
+help: ## 显示所有指令说明
+		@awk 'BEGIN {FS = ":.*?## "}; \
+		/^[a-zA-Z0-9_.-]+:.*?## / { \
+			printf "\033[36m%-18s\033[0m %s\n", $$1, $$2 \
+		}' $(MAKEFILE_LIST) | sort
 
-########### Elixir #########
-# 构建项目
-build: clean deps.get compile
+setup: ## 初始化开发环境
+	@mix do deps.get, compile
 
-deps.get:
-	@mix deps.get
-	@echo "Dependencies installed."
-
-deps.upgrade:
-	@mix deps.update --all
-	@echo "Dependencies updated."
-
-deps.purge:
-	@rm -rf deps
-	@rm -rf _build
-	@echo "Dependencies purged."
-
-compile:
+build: ## 编译项目
 	@mix compile
 
-# 代码质量检查
-lint:
+## 代码质量
+lint: ## 静态代码检查
 	@mix format --check-formatted
 
-# 格式化代码
-fmt:
+fmt: ## 自动格式化代码
 	@mix format
 
-# 运行测试
-test:
+test: ## 运行测试套件
 	@mix test
 
-clean:
-	@mix clean
-	@echo "Cleaning complete."
+test.watch: ## 监听模式运行测试
+	@mix test.watch
 
-# 交互式Elixir Shell
-repl:
+## 开发工具
+repl: ## 启动交互式环境
 	@iex -S mix
 
-upload:
-	@mix hex.publish
+## 依赖管理指令
+deps.get: ## 获取所有依赖
+	@mix deps.get
+
+deps.update: ## 更新指定依赖
+	@mix deps.update $(filter-out $@,$(MAKECMDGOALS))
+
+deps.update.all: ## 更新所有依赖
+	@mix deps.update --all
+
+deps.clean: ## 清理未使用的依赖
+	@mix deps.clean --unused
+
+deps.compile: ## 编译项目依赖
+	@mix deps.compile
+
+deps.tree: ## 显示依赖树状结构
+	@mix deps.tree
