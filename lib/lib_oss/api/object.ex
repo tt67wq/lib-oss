@@ -42,7 +42,6 @@ defmodule LibOss.Api.Object do
       end
   """
 
-  alias LibOss.Core
   alias LibOss.Typespecs
 
   @doc """
@@ -109,7 +108,7 @@ defmodule LibOss.Api.Object do
   @spec put_object(module(), Typespecs.bucket(), Typespecs.object(), iodata(), Typespecs.headers()) ::
           :ok | {:error, LibOss.Exception.t()}
   def put_object(client, bucket, object, data, headers \\ []) do
-    Core.put_object(client, bucket, object, data, headers)
+    LibOss.Core.Object.put_object(client, bucket, object, data, headers)
   end
 
   @doc """
@@ -178,7 +177,7 @@ defmodule LibOss.Api.Object do
   @spec get_object(module(), Typespecs.bucket(), Typespecs.object(), Typespecs.headers()) ::
           {:ok, binary()} | {:error, LibOss.Exception.t()}
   def get_object(client, bucket, object, req_headers \\ []) do
-    Core.get_object(client, bucket, object, req_headers)
+    LibOss.Core.Object.get_object(client, bucket, object, req_headers)
   end
 
   @doc """
@@ -268,7 +267,7 @@ defmodule LibOss.Api.Object do
           Typespecs.headers()
         ) :: :ok | {:error, LibOss.Exception.t()}
   def copy_object(client, bucket, object, source_bucket, source_object, headers \\ []) do
-    Core.copy_object(client, bucket, object, source_bucket, source_object, headers)
+    LibOss.Core.Object.copy_object(client, bucket, object, source_bucket, source_object, headers)
   end
 
   @doc """
@@ -340,7 +339,7 @@ defmodule LibOss.Api.Object do
   """
   @spec delete_object(module(), Typespecs.bucket(), Typespecs.object()) :: :ok | {:error, LibOss.Exception.t()}
   def delete_object(client, bucket, object) do
-    Core.delete_object(client, bucket, object)
+    LibOss.Core.Object.delete_object(client, bucket, object)
   end
 
   @doc """
@@ -438,7 +437,7 @@ defmodule LibOss.Api.Object do
   @spec delete_multiple_objects(module(), Typespecs.bucket(), [Typespecs.object()]) ::
           :ok | {:error, LibOss.Exception.t()}
   def delete_multiple_objects(client, bucket, objects) do
-    Core.delete_multiple_objects(client, bucket, objects)
+    LibOss.Core.Object.delete_multiple_objects(client, bucket, objects)
   end
 
   @doc """
@@ -525,7 +524,7 @@ defmodule LibOss.Api.Object do
           Typespecs.headers()
         ) :: :ok | {:error, LibOss.Exception.t()}
   def append_object(client, bucket, object, since, data, headers \\ []) do
-    Core.append_object(client, bucket, object, since, data, headers)
+    LibOss.Core.Object.append_object(client, bucket, object, since, data, headers)
   end
 
   @doc """
@@ -654,7 +653,7 @@ defmodule LibOss.Api.Object do
   @spec head_object(module(), Typespecs.bucket(), Typespecs.object(), Typespecs.headers()) ::
           {:ok, Typespecs.dict()} | {:error, LibOss.Exception.t()}
   def head_object(client, bucket, object, headers \\ []) do
-    Core.head_object(client, bucket, object, headers)
+    LibOss.Core.Object.head_object(client, bucket, object, headers)
   end
 
   @doc """
@@ -792,7 +791,7 @@ defmodule LibOss.Api.Object do
   @spec get_object_meta(module(), Typespecs.bucket(), Typespecs.object()) ::
           {:ok, Typespecs.dict()} | {:error, LibOss.Exception.t()}
   def get_object_meta(client, bucket, object) do
-    Core.get_object_meta(client, bucket, object)
+    LibOss.Core.Object.get_object_meta(client, bucket, object)
   end
 
   @doc """

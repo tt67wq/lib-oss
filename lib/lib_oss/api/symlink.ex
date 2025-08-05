@@ -5,7 +5,7 @@ defmodule LibOss.Api.Symlink do
   提供符号链接的创建和获取功能。
   """
 
-  alias LibOss.Core
+  alias LibOss.Core.Symlink
   alias LibOss.Typespecs
 
   @doc """
@@ -21,7 +21,7 @@ defmodule LibOss.Api.Symlink do
   @spec put_symlink(module(), Typespecs.bucket(), Typespecs.object(), String.t(), Typespecs.headers()) ::
           :ok | {:error, LibOss.Exception.t()}
   def put_symlink(client, bucket, object, target_object, headers \\ []) do
-    Core.put_symlink(client, bucket, object, target_object, headers)
+    Symlink.put_symlink(client, bucket, object, target_object, headers)
   end
 
   @doc """
@@ -37,7 +37,7 @@ defmodule LibOss.Api.Symlink do
   @spec get_symlink(module(), Typespecs.bucket(), Typespecs.object()) ::
           {:ok, binary()} | {:error, LibOss.Exception.t()}
   def get_symlink(client, bucket, object) do
-    Core.get_symlink(client, bucket, object)
+    Symlink.get_symlink(client, bucket, object)
   end
 
   @doc """

@@ -24,6 +24,7 @@ defmodule LibOss.LibOssTest do
     Debug.debug(token)
   end
 
+  # @tag :special
   test "put_object", %{bucket: bucket} do
     assert :ok == App.put_object(bucket, "/test/test.txt", "hello world")
   end

@@ -5,7 +5,7 @@ defmodule LibOss.Api.Multipart do
   提供多部分上传的初始化、上传分片、完成上传、中止上传等功能。
   """
 
-  alias LibOss.Core
+  alias LibOss.Core.Multipart
   alias LibOss.Typespecs
 
   @doc """
@@ -21,7 +21,7 @@ defmodule LibOss.Api.Multipart do
   @spec init_multi_upload(module(), Typespecs.bucket(), Typespecs.object(), Typespecs.headers()) ::
           {:ok, Typespecs.upload_id()} | {:error, LibOss.Exception.t()}
   def init_multi_upload(client, bucket, object, req_headers \\ []) do
-    Core.init_multi_upload(client, bucket, object, req_headers)
+    Multipart.init_multi_upload(client, bucket, object, req_headers)
   end
 
   @doc """
@@ -43,7 +43,7 @@ defmodule LibOss.Api.Multipart do
           binary()
         ) :: {:ok, Typespecs.etag()} | {:error, LibOss.Exception.t()}
   def upload_part(client, bucket, object, upload_id, part_number, data) do
-    Core.upload_part(client, bucket, object, upload_id, part_number, data)
+    Multipart.upload_part(client, bucket, object, upload_id, part_number, data)
   end
 
   @doc """
@@ -85,7 +85,7 @@ defmodule LibOss.Api.Multipart do
   @spec list_multipart_uploads(module(), Typespecs.bucket(), Typespecs.params()) ::
           {:ok, list(Typespecs.dict())} | {:error, LibOss.Exception.t()}
   def list_multipart_uploads(client, bucket, query_params) do
-    Core.list_multipart_uploads(client, bucket, query_params)
+    Multipart.list_multipart_uploads(client, bucket, query_params)
   end
 
   @doc """
@@ -110,7 +110,7 @@ defmodule LibOss.Api.Multipart do
           Typespecs.headers()
         ) :: :ok | {:error, LibOss.Exception.t()}
   def complete_multipart_upload(client, bucket, object, upload_id, parts, headers \\ []) do
-    Core.complete_multipart_upload(client, bucket, object, upload_id, parts, headers)
+    Multipart.complete_multipart_upload(client, bucket, object, upload_id, parts, headers)
   end
 
   @doc """
@@ -126,7 +126,7 @@ defmodule LibOss.Api.Multipart do
   @spec abort_multipart_upload(module(), Typespecs.bucket(), Typespecs.object(), Typespecs.upload_id()) ::
           :ok | {:error, LibOss.Exception.t()}
   def abort_multipart_upload(client, bucket, object, upload_id) do
-    Core.abort_multipart_upload(client, bucket, object, upload_id)
+    Multipart.abort_multipart_upload(client, bucket, object, upload_id)
   end
 
   @doc """
@@ -182,7 +182,7 @@ defmodule LibOss.Api.Multipart do
           Typespecs.params()
         ) :: {:ok, list(Typespecs.dict())} | {:error, LibOss.Exception.t()}
   def list_parts(client, bucket, object, upload_id, query_params \\ %{}) do
-    Core.list_parts(client, bucket, object, upload_id, query_params)
+    Multipart.list_parts(client, bucket, object, upload_id, query_params)
   end
 
   @doc """

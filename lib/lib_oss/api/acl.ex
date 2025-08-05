@@ -5,7 +5,7 @@ defmodule LibOss.Api.Acl do
   提供对象和存储桶的ACL权限管理功能。
   """
 
-  alias LibOss.Core
+  alias LibOss.Core.Acl
   alias LibOss.Typespecs
 
   @doc """
@@ -21,7 +21,7 @@ defmodule LibOss.Api.Acl do
   @spec put_object_acl(module(), Typespecs.bucket(), Typespecs.object(), String.t()) ::
           :ok | {:error, LibOss.Exception.t()}
   def put_object_acl(client, bucket, object, acl) do
-    Core.put_object_acl(client, bucket, object, acl)
+    Acl.put_object_acl(client, bucket, object, acl)
   end
 
   @doc """
@@ -37,7 +37,7 @@ defmodule LibOss.Api.Acl do
   @spec get_object_acl(module(), Typespecs.bucket(), Typespecs.object()) ::
           {:ok, binary()} | {:error, LibOss.Exception.t()}
   def get_object_acl(client, bucket, object) do
-    Core.get_object_acl(client, bucket, object)
+    Acl.get_object_acl(client, bucket, object)
   end
 
   @doc """
@@ -53,7 +53,7 @@ defmodule LibOss.Api.Acl do
   @spec put_bucket_acl(module(), Typespecs.bucket(), String.t()) ::
           :ok | {:error, LibOss.Exception.t()}
   def put_bucket_acl(client, bucket, acl) do
-    Core.put_bucket_acl(client, bucket, acl)
+    Acl.put_bucket_acl(client, bucket, acl)
   end
 
   @doc """
@@ -69,7 +69,7 @@ defmodule LibOss.Api.Acl do
   @spec get_bucket_acl(module(), Typespecs.bucket()) ::
           {:ok, binary()} | {:error, LibOss.Exception.t()}
   def get_bucket_acl(client, bucket) do
-    Core.get_bucket_acl(client, bucket)
+    Acl.get_bucket_acl(client, bucket)
   end
 
   @doc """

@@ -5,7 +5,7 @@ defmodule LibOss.Api.Tagging do
   提供对象标签的设置、获取和删除功能。
   """
 
-  alias LibOss.Core
+  alias LibOss.Core.Tagging
   alias LibOss.Typespecs
 
   @doc """
@@ -21,7 +21,7 @@ defmodule LibOss.Api.Tagging do
   @spec put_object_tagging(module(), Typespecs.bucket(), Typespecs.object(), Typespecs.tags()) ::
           :ok | {:error, LibOss.Exception.t()}
   def put_object_tagging(client, bucket, object, tags) do
-    Core.put_object_tagging(client, bucket, object, tags)
+    Tagging.put_object_tagging(client, bucket, object, tags)
   end
 
   @doc """
@@ -41,7 +41,7 @@ defmodule LibOss.Api.Tagging do
   @spec get_object_tagging(module(), Typespecs.bucket(), Typespecs.object()) ::
           {:ok, Typespecs.dict()} | {:error, LibOss.Exception.t()}
   def get_object_tagging(client, bucket, object) do
-    Core.get_object_tagging(client, bucket, object)
+    Tagging.get_object_tagging(client, bucket, object)
   end
 
   @doc """
@@ -57,7 +57,7 @@ defmodule LibOss.Api.Tagging do
   @spec delete_object_tagging(module(), Typespecs.bucket(), Typespecs.object()) ::
           :ok | {:error, LibOss.Exception.t()}
   def delete_object_tagging(client, bucket, object) do
-    Core.delete_object_tagging(client, bucket, object)
+    Tagging.delete_object_tagging(client, bucket, object)
   end
 
   @doc """

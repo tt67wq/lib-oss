@@ -5,7 +5,7 @@ defmodule LibOss.Api.Token do
   提供Web端直传文件到OSS的签名生成功能。
   """
 
-  alias LibOss.Core
+  alias LibOss.Core.Token
   alias LibOss.Typespecs
 
   @doc """
@@ -21,7 +21,7 @@ defmodule LibOss.Api.Token do
   @spec get_token(module(), Typespecs.bucket(), Typespecs.object(), non_neg_integer(), binary()) ::
           {:ok, binary()} | {:error, LibOss.Exception.t()}
   def get_token(client, bucket, object, expire_sec \\ 3600, callback \\ "") do
-    Core.get_token(client, bucket, object, expire_sec, callback)
+    Token.get_token(client, bucket, object, expire_sec, callback)
   end
 
   @doc """

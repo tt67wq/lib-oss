@@ -38,7 +38,13 @@ defmodule LibOss do
         LibOss.Supervisor.start_link(__MODULE__, cfg)
       end
 
-      defp delegate(method, args), do: apply(Core, method, [__MODULE__ | args])
+      defp delegate_token(method, args), do: apply(LibOss.Core.Token, method, [__MODULE__ | args])
+      defp delegate_object(method, args), do: apply(LibOss.Core.Object, method, [__MODULE__ | args])
+      defp delegate_acl(method, args), do: apply(LibOss.Core.Acl, method, [__MODULE__ | args])
+      defp delegate_symlink(method, args), do: apply(LibOss.Core.Symlink, method, [__MODULE__ | args])
+      defp delegate_tagging(method, args), do: apply(LibOss.Core.Tagging, method, [__MODULE__ | args])
+      defp delegate_bucket(method, args), do: apply(LibOss.Core.Bucket, method, [__MODULE__ | args])
+      defp delegate_multipart(method, args), do: apply(LibOss.Core.Multipart, method, [__MODULE__ | args])
 
       # ============================================================================
       # Web上传令牌生成API
@@ -57,7 +63,7 @@ defmodule LibOss do
       @spec get_token(Typespecs.bucket(), Typespecs.object(), non_neg_integer(), binary()) ::
               {:ok, binary()} | err_t()
       def get_token(bucket, object, expire_sec \\ 3600, callback \\ "") do
-        delegate(:get_token, [bucket, object, expire_sec, callback])
+        delegate_token(:get_token, [bucket, object, expire_sec, callback])
       end
 
       # ============================================================================
@@ -76,7 +82,7 @@ defmodule LibOss do
       """
       @spec put_object(Typespecs.bucket(), Typespecs.object(), iodata(), Typespecs.headers()) :: :ok | err_t()
       def put_object(bucket, object, data, headers \\ []) do
-        delegate(:put_object, [bucket, object, data, headers])
+        delegate_object(:put_object, [bucket, object, data, headers])
       end
 
       @doc """
@@ -93,7 +99,7 @@ defmodule LibOss do
       """
       @spec get_object(Typespecs.bucket(), Typespecs.object(), Typespecs.headers()) :: {:ok, binary()} | err_t()
       def get_object(bucket, object, req_headers \\ []) do
-        delegate(:get_object, [bucket, object, req_headers])
+        delegate_object(:get_object, [bucket, object, req_headers])
       end
 
       @doc """
@@ -114,7 +120,7 @@ defmodule LibOss do
               Typespecs.headers()
             ) :: :ok | err_t()
       def copy_object(bucket, object, source_bucket, source_object, headers \\ []) do
-        delegate(:copy_object, [bucket, object, source_bucket, source_object, headers])
+        delegate_object(:copy_object, [bucket, object, source_bucket, source_object, headers])
       end
 
       @doc """
@@ -129,7 +135,7 @@ defmodule LibOss do
       """
       @spec delete_object(Typespecs.bucket(), Typespecs.object()) :: :ok | err_t()
       def delete_object(bucket, object) do
-        delegate(:delete_object, [bucket, object])
+        delegate_object(:delete_object, [bucket, object])
       end
 
       @doc """
@@ -144,7 +150,7 @@ defmodule LibOss do
       """
       @spec delete_multiple_objects(Typespecs.bucket(), [Typespecs.object()]) :: :ok | err_t()
       def delete_multiple_objects(bucket, objects) do
-        delegate(:delete_multiple_objects, [bucket, objects])
+        delegate_object(:delete_multiple_objects, [bucket, objects])
       end
 
       @doc """
@@ -167,7 +173,7 @@ defmodule LibOss do
               Typespecs.headers()
             ) :: :ok | err_t()
       def append_object(bucket, object, since, data, headers \\ []) do
-        delegate(:append_object, [bucket, object, since, data, headers])
+        delegate_object(:append_object, [bucket, object, since, data, headers])
       end
 
       @doc """
@@ -199,7 +205,7 @@ defmodule LibOss do
       @spec head_object(Typespecs.bucket(), Typespecs.object(), Typespecs.headers()) ::
               {:ok, Typespecs.dict()} | err_t()
       def head_object(bucket, object, headers \\ []) do
-        delegate(:head_object, [bucket, object, headers])
+        delegate_object(:head_object, [bucket, object, headers])
       end
 
       @doc """
@@ -224,7 +230,7 @@ defmodule LibOss do
       @spec get_object_meta(Typespecs.bucket(), Typespecs.object()) ::
               {:ok, Typespecs.dict()} | err_t()
       def get_object_meta(bucket, object) do
-        delegate(:get_object_meta, [bucket, object])
+        delegate_object(:get_object_meta, [bucket, object])
       end
 
       # ============================================================================
@@ -243,7 +249,7 @@ defmodule LibOss do
       """
       @spec put_object_acl(Typespecs.bucket(), Typespecs.object(), String.t()) :: :ok | err_t()
       def put_object_acl(bucket, object, acl) do
-        delegate(:put_object_acl, [bucket, object, acl])
+        delegate_acl(:put_object_acl, [bucket, object, acl])
       end
 
       @doc """
@@ -259,7 +265,7 @@ defmodule LibOss do
       @spec get_object_acl(Typespecs.bucket(), Typespecs.object()) ::
               {:ok, binary()} | err_t()
       def get_object_acl(bucket, object) do
-        delegate(:get_object_acl, [bucket, object])
+        delegate_acl(:get_object_acl, [bucket, object])
       end
 
       # ============================================================================
@@ -279,7 +285,7 @@ defmodule LibOss do
       @spec put_symlink(Typespecs.bucket(), Typespecs.object(), String.t(), Typespecs.headers()) ::
               :ok | err_t()
       def put_symlink(bucket, object, target_object, headers \\ []) do
-        delegate(:put_symlink, [bucket, object, target_object, headers])
+        delegate_symlink(:put_symlink, [bucket, object, target_object, headers])
       end
 
       @doc """
@@ -295,7 +301,7 @@ defmodule LibOss do
       @spec get_symlink(Typespecs.bucket(), Typespecs.object()) ::
               {:ok, binary()} | err_t()
       def get_symlink(bucket, object) do
-        delegate(:get_symlink, [bucket, object])
+        delegate_symlink(:get_symlink, [bucket, object])
       end
 
       # ============================================================================
@@ -315,7 +321,7 @@ defmodule LibOss do
       @spec put_object_tagging(Typespecs.bucket(), Typespecs.object(), Typespecs.tags()) ::
               :ok | err_t()
       def put_object_tagging(bucket, object, tags) do
-        delegate(:put_object_tagging, [bucket, object, tags])
+        delegate_tagging(:put_object_tagging, [bucket, object, tags])
       end
 
       @doc """
@@ -335,7 +341,7 @@ defmodule LibOss do
       @spec get_object_tagging(Typespecs.bucket(), Typespecs.object()) ::
               {:ok, Typespecs.dict()} | err_t()
       def get_object_tagging(bucket, object) do
-        delegate(:get_object_tagging, [bucket, object])
+        delegate_tagging(:get_object_tagging, [bucket, object])
       end
 
       @doc """
@@ -351,7 +357,7 @@ defmodule LibOss do
       @spec delete_object_tagging(Typespecs.bucket(), Typespecs.object()) ::
               :ok | err_t()
       def delete_object_tagging(bucket, object) do
-        delegate(:delete_object_tagging, [bucket, object])
+        delegate_tagging(:delete_object_tagging, [bucket, object])
       end
 
       # ============================================================================
@@ -370,7 +376,7 @@ defmodule LibOss do
       """
       @spec put_bucket(Typespecs.bucket(), String.t(), String.t(), Typespecs.headers()) :: :ok | err_t()
       def put_bucket(bucket, storage_class \\ "Standard", data_redundancy_type \\ "LRS", headers \\ []) do
-        delegate(:put_bucket, [bucket, storage_class, data_redundancy_type, headers])
+        delegate_bucket(:put_bucket, [bucket, storage_class, data_redundancy_type, headers])
       end
 
       @doc """
@@ -385,7 +391,7 @@ defmodule LibOss do
       """
       @spec delete_bucket(Typespecs.bucket()) :: :ok | err_t()
       def delete_bucket(bucket) do
-        delegate(:delete_bucket, [bucket])
+        delegate_bucket(:delete_bucket, [bucket])
       end
 
       @doc """
@@ -428,7 +434,7 @@ defmodule LibOss do
       @spec get_bucket(Typespecs.bucket(), Typespecs.params()) ::
               {:ok, list(Typespecs.dict())} | err_t()
       def get_bucket(bucket, query_params) do
-        delegate(:get_bucket, [bucket, query_params])
+        delegate_bucket(:get_bucket, [bucket, query_params])
       end
 
       @doc """
@@ -470,7 +476,7 @@ defmodule LibOss do
       @spec list_object_v2(Typespecs.bucket(), Typespecs.params()) ::
               {:ok, list(Typespecs.dict())} | err_t()
       def list_object_v2(bucket, query_params) do
-        delegate(:list_object_v2, [bucket, query_params])
+        delegate_bucket(:list_object_v2, [bucket, query_params])
       end
 
       @doc """
@@ -499,7 +505,7 @@ defmodule LibOss do
       """
       @spec get_bucket_info(Typespecs.bucket()) :: {:ok, Typespecs.dict()} | err_t()
       def get_bucket_info(bucket) do
-        delegate(:get_bucket_info, [bucket])
+        delegate_bucket(:get_bucket_info, [bucket])
       end
 
       @doc """
@@ -515,7 +521,7 @@ defmodule LibOss do
       @spec get_bucket_location(Typespecs.bucket()) ::
               {:ok, binary()} | err_t()
       def get_bucket_location(bucket) do
-        delegate(:get_bucket_location, [bucket])
+        delegate_bucket(:get_bucket_location, [bucket])
       end
 
       @doc """
@@ -539,7 +545,7 @@ defmodule LibOss do
       @spec get_bucket_stat(Typespecs.bucket()) ::
               {:ok, Typespecs.dict()} | err_t()
       def get_bucket_stat(bucket) do
-        delegate(:get_bucket_stat, [bucket])
+        delegate_bucket(:get_bucket_stat, [bucket])
       end
 
       @doc """
@@ -554,7 +560,7 @@ defmodule LibOss do
       """
       @spec put_bucket_acl(Typespecs.bucket(), String.t()) :: :ok | err_t()
       def put_bucket_acl(bucket, acl) do
-        delegate(:put_bucket_acl, [bucket, acl])
+        delegate_acl(:put_bucket_acl, [bucket, acl])
       end
 
       @doc """
@@ -570,7 +576,7 @@ defmodule LibOss do
       @spec get_bucket_acl(Typespecs.bucket()) ::
               {:ok, binary()} | err_t()
       def get_bucket_acl(bucket) do
-        delegate(:get_bucket_acl, [bucket])
+        delegate_acl(:get_bucket_acl, [bucket])
       end
 
       # ============================================================================
@@ -594,7 +600,7 @@ defmodule LibOss do
             ) ::
               {:ok, Typespecs.upload_id()} | err_t()
       def init_multi_upload(bucket, object, req_headers \\ []) do
-        delegate(:init_multi_upload, [bucket, object, req_headers])
+        delegate_multipart(:init_multi_upload, [bucket, object, req_headers])
       end
 
       @doc """
@@ -616,7 +622,7 @@ defmodule LibOss do
             ) ::
               {:ok, Typespecs.etag()} | err_t()
       def upload_part(bucket, object, upload_id, part_number, data) do
-        delegate(:upload_part, [bucket, object, upload_id, part_number, data])
+        delegate_multipart(:upload_part, [bucket, object, upload_id, part_number, data])
       end
 
       @doc """
@@ -658,7 +664,7 @@ defmodule LibOss do
       @spec list_multipart_uploads(Typespecs.bucket(), Typespecs.params()) ::
               {:ok, list(Typespecs.dict())} | err_t()
       def list_multipart_uploads(bucket, query_params) do
-        delegate(:list_multipart_uploads, [bucket, query_params])
+        delegate_multipart(:list_multipart_uploads, [bucket, query_params])
       end
 
       @doc """
@@ -682,7 +688,7 @@ defmodule LibOss do
               Typespecs.headers()
             ) :: :ok | err_t()
       def complete_multipart_upload(bucket, object, upload_id, parts, headers \\ []) do
-        delegate(:complete_multipart_upload, [bucket, object, upload_id, parts, headers])
+        delegate_multipart(:complete_multipart_upload, [bucket, object, upload_id, parts, headers])
       end
 
       @doc """
@@ -701,7 +707,7 @@ defmodule LibOss do
               Typespecs.upload_id()
             ) :: :ok | err_t()
       def abort_multipart_upload(bucket, object, upload_id) do
-        delegate(:abort_multipart_upload, [bucket, object, upload_id])
+        delegate_multipart(:abort_multipart_upload, [bucket, object, upload_id])
       end
 
       @doc """
@@ -757,7 +763,7 @@ defmodule LibOss do
             ) ::
               {:ok, list(Typespecs.dict())} | err_t()
       def list_parts(bucket, object, upload_id, query_params \\ %{}) do
-        delegate(:list_parts, [bucket, object, upload_id, query_params])
+        delegate_multipart(:list_parts, [bucket, object, upload_id, query_params])
       end
     end
   end

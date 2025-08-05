@@ -5,7 +5,7 @@ defmodule LibOss.Api.Bucket do
   提供存储桶的创建、删除、列举、信息获取等功能。
   """
 
-  alias LibOss.Core
+  alias LibOss.Core.Bucket
   alias LibOss.Typespecs
 
   @doc """
@@ -21,7 +21,7 @@ defmodule LibOss.Api.Bucket do
   @spec put_bucket(module(), Typespecs.bucket(), String.t(), String.t(), Typespecs.headers()) ::
           :ok | {:error, LibOss.Exception.t()}
   def put_bucket(client, bucket, storage_class \\ "Standard", data_redundancy_type \\ "LRS", headers \\ []) do
-    Core.put_bucket(client, bucket, storage_class, data_redundancy_type, headers)
+    Bucket.put_bucket(client, bucket, storage_class, data_redundancy_type, headers)
   end
 
   @doc """
@@ -36,7 +36,7 @@ defmodule LibOss.Api.Bucket do
   """
   @spec delete_bucket(module(), Typespecs.bucket()) :: :ok | {:error, LibOss.Exception.t()}
   def delete_bucket(client, bucket) do
-    Core.delete_bucket(client, bucket)
+    Bucket.delete_bucket(client, bucket)
   end
 
   @doc """
@@ -79,7 +79,7 @@ defmodule LibOss.Api.Bucket do
   @spec get_bucket(module(), Typespecs.bucket(), Typespecs.params()) ::
           {:ok, list(Typespecs.dict())} | {:error, LibOss.Exception.t()}
   def get_bucket(client, bucket, query_params) do
-    Core.get_bucket(client, bucket, query_params)
+    Bucket.get_bucket(client, bucket, query_params)
   end
 
   @doc """
@@ -121,7 +121,7 @@ defmodule LibOss.Api.Bucket do
   @spec list_object_v2(module(), Typespecs.bucket(), Typespecs.params()) ::
           {:ok, list(Typespecs.dict())} | {:error, LibOss.Exception.t()}
   def list_object_v2(client, bucket, query_params) do
-    Core.list_object_v2(client, bucket, query_params)
+    Bucket.list_object_v2(client, bucket, query_params)
   end
 
   @doc """
@@ -151,7 +151,7 @@ defmodule LibOss.Api.Bucket do
   @spec get_bucket_info(module(), Typespecs.bucket()) ::
           {:ok, Typespecs.dict()} | {:error, LibOss.Exception.t()}
   def get_bucket_info(client, bucket) do
-    Core.get_bucket_info(client, bucket)
+    Bucket.get_bucket_info(client, bucket)
   end
 
   @doc """
@@ -167,7 +167,7 @@ defmodule LibOss.Api.Bucket do
   @spec get_bucket_location(module(), Typespecs.bucket()) ::
           {:ok, binary()} | {:error, LibOss.Exception.t()}
   def get_bucket_location(client, bucket) do
-    Core.get_bucket_location(client, bucket)
+    Bucket.get_bucket_location(client, bucket)
   end
 
   @doc """
@@ -191,7 +191,7 @@ defmodule LibOss.Api.Bucket do
   @spec get_bucket_stat(module(), Typespecs.bucket()) ::
           {:ok, Typespecs.dict()} | {:error, LibOss.Exception.t()}
   def get_bucket_stat(client, bucket) do
-    Core.get_bucket_stat(client, bucket)
+    Bucket.get_bucket_stat(client, bucket)
   end
 
   @doc """

@@ -117,9 +117,20 @@ defmodule LibOss.Model.Request do
     |> LibOss.Utils.do_sign(config[:access_key_secret])
   end
 
+  # POST
+  #
+  # application/octet-stream
+  # Tue, 05 Aug 2025 06:11:27 GMT
+  # /hope-data/test/multi-test.txt?uploads
   @spec string_to_sign(t()) :: binary()
   defp string_to_sign(%{scheme: "rtmp"} = request) do
-    Enum.join([expire_time(request), canonicalize_query_params(request) <> canonicalize_resource(request)], "\n")
+    Enum.join(
+      [
+        expire_time(request),
+        canonicalize_query_params(request) <> canonicalize_resource(request)
+      ],
+      "\n"
+    )
   end
 
   defp string_to_sign(%__MODULE__{method: method} = request) do
