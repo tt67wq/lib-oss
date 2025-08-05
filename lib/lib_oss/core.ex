@@ -301,7 +301,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         %{"AccessControlPolicy" => %{"AccessControlList" => %{"Grant" => grant}}} ->
           {:ok, grant}
@@ -387,7 +387,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         %{"Tagging" => %{"TagSet" => %{"Tag" => tags}}} ->
           {:ok, tags}
@@ -438,7 +438,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         %{"InitiateMultipartUploadResult" => %{"UploadId" => upload_id}} ->
           {:ok, upload_id}
@@ -499,7 +499,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         # NOTE
         %{"ListBucketResult" => %{"Contents" => ret}} ->
@@ -581,7 +581,7 @@ defmodule LibOss.Core do
     }
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
-      {:ok, XmlToMap.naive_map(body)}
+      {:ok, LibOss.Xml.naive_map(body)}
     end
   end
 
@@ -639,7 +639,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         %{"ListBucketResult" => ret} ->
           {:ok, Map.get(ret, "Contents", [])}
@@ -664,7 +664,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         %{"ListBucketResult" => ret} -> {:ok, Map.get(ret, "Contents", [])}
         _ -> {:error, Exception.new("invalid response", body)}
@@ -685,7 +685,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         %{"BucketInfo" => ret} -> {:ok, ret}
         _ -> {:error, Exception.new("invalid response", body)}
@@ -706,7 +706,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         %{"LocationConstraint" => ret} -> {:ok, ret}
         _ -> {:error, Exception.new("invalid response", body)}
@@ -727,7 +727,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         %{"BucketStat" => ret} -> {:ok, ret}
         _ -> {:error, Exception.new("invalid response", body)}
@@ -767,7 +767,7 @@ defmodule LibOss.Core do
 
     with {:ok, %Http.Response{body: body}} <- call(config, req) do
       body
-      |> XmlToMap.naive_map()
+      |> LibOss.Xml.naive_map()
       |> case do
         %{"AccessControlPolicy" => ret} -> {:ok, ret}
         _ -> {:error, Exception.new("invalid response", body)}
