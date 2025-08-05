@@ -16,12 +16,13 @@ defmodule LibOss.Core do
   """
 
   def start_link({name, http, config}) do
-    config =
+    # 使用增强的配置验证
+    validated_config =
       config
-      |> Config.validate!()
+      |> Config.validate_enhanced!(runtime: true)
       |> Keyword.put(:http, http)
 
-    Agent.start_link(fn -> config end, name: name)
+    Agent.start_link(fn -> validated_config end, name: name)
   end
 
   def get(name) do
