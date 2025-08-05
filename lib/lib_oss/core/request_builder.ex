@@ -107,10 +107,13 @@ defmodule LibOss.Core.RequestBuilder do
   """
   @spec build_base_request(atom(), binary(), binary(), keyword()) :: Request.t()
   def build_base_request(method, bucket, object, opts \\ []) do
+    resource = build_resource(bucket, object)
+
     %Request{
       method: method,
       bucket: bucket,
       object: object,
+      resource: resource,
       host: Keyword.get(opts, :host, ""),
       headers: Keyword.get(opts, :headers, []),
       body: Keyword.get(opts, :body, ""),
@@ -181,5 +184,14 @@ defmodule LibOss.Core.RequestBuilder do
   @spec set_body(Request.t(), binary()) :: Request.t()
   def set_body(%Request{} = request, body) when is_binary(body) do
     %{request | body: body}
+  end
+
+  @spec build_resource(binary(), binary()) :: binary()
+  defp build_resource(bucket, object) do
+    case {bucket, object} do
+      {"", ""} -> "/"
+      {bucket, ""} -> Path.join(["/", bucket]) <> "/"
+      {bucket, object} -> Path.join(["/", bucket, object])
+    end
   end
 end
