@@ -81,11 +81,46 @@ LibOss是Elixir实现的一个[阿里云oss](https://help.aliyun.com/product/318
 - [ ] LiveChannel
 
 
+## 架构说明
+
+LibOss采用模块化架构设计，将不同功能按照业务域进行分离，提高代码的可维护性和可扩展性。
+
+### 核心架构
+
+```
+lib/
+├── lib_oss.ex                 # 主入口模块，提供统一API
+├── lib_oss/
+│   ├── api/                   # API层（按功能域分离）
+│   │   ├── object.ex          # 对象操作API
+│   │   ├── bucket.ex          # 存储桶操作API
+│   │   ├── multipart.ex       # 多部分上传API
+│   │   ├── acl.ex             # ACL管理API
+│   │   ├── tagging.ex         # 标签管理API
+│   │   ├── symlink.ex         # 符号链接API
+│   │   └── token.ex           # 令牌生成API
+│   ├── core.ex               # 核心业务逻辑
+│   ├── config/               # 配置管理
+│   │   ├── validator.ex      # 增强配置验证器
+│   │   └── manager.ex        # 配置管理器
+│   ├── http/                 # HTTP客户端实现
+│   ├── model/                # 数据模型
+│   └── [其他支撑模块...]
+```
+
+### 设计特点
+
+- **模块化设计**: 按功能域组织API，职责清晰
+- **委托模式**: 主模块通过API模块委托到Core模块执行
+- **完全兼容**: 保持向后兼容性，现有代码无需修改
+- **易于扩展**: 新功能可以轻松添加到对应的API模块
+- **文档完善**: 每个模块都有详细的中文文档和示例
+
 ## 使用方法
 
 ```elixir
 Mix.install([
-  {:lib_oss, "~> 0.1"}
+  {:lib_oss, "~> 0.2"}
 ])
 
 # 创建一个oss客户端

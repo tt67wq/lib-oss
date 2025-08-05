@@ -71,8 +71,9 @@ make deps.tree
 - **OTP Supervision**: Uses Supervisor with one-for-one strategy
 - **Agent Pattern**: Core module uses Agent for configuration state management
 - **Protocol**: Http protocol allows for different HTTP client implementations
-- **Delegation**: Main module delegates all operations to Core module
-- **Configuration Validation**: Uses NimbleOptions for robust config validation
+- **Modular API Design**: API layer organized by functional domains for better maintainability
+- **Delegation Pattern**: Main module delegates operations through API modules to Core module
+- **Enhanced Configuration**: Multi-layer validation with runtime checks and environment-specific schemas
 
 ### Authentication Flow
 
@@ -86,21 +87,33 @@ The SDK implements OSS authentication through:
 
 ```
 lib/
-├── lib_oss.ex                 # Main public API
+├── lib_oss.ex                 # Main public API (refactored)
 ├── lib_oss/
+│   ├── api/                   # API layer (按功能域分离)
+│   │   ├── object.ex          # Object operations API
+│   │   ├── bucket.ex          # Bucket operations API
+│   │   ├── multipart.ex       # Multipart upload API
+│   │   ├── acl.ex             # ACL management API
+│   │   ├── tagging.ex         # Tagging management API
+│   │   ├── symlink.ex         # Symlink operations API
+│   │   └── token.ex           # Token generation API
 │   ├── core.ex               # Core business logic
 │   ├── http.ex               # HTTP protocol definition
-│   ├── supervisor.ex        # OTP supervisor
-│   ├── typespecs.ex         # Type definitions
-│   ├── exception.ex         # Custom exceptions
-│   ├── debug.ex             # Debug utilities
-│   ├── utils.ex             # Utility functions
+│   ├── supervisor.ex         # OTP supervisor
+│   ├── typespecs.ex          # Type definitions
+│   ├── exception.ex          # Custom exceptions
+│   ├── debug.ex              # Debug utilities
+│   ├── utils.ex              # Utility functions
+│   ├── xml.ex                # XML processing utilities
+│   ├── config/               # Configuration management
+│   │   ├── validator.ex      # Enhanced configuration validator
+│   │   └── manager.ex        # Configuration manager
 │   ├── model/
-│   │   ├── config.ex        # Configuration model
-│   │   ├── http.ex          # HTTP request/response models
-│   │   └── request.ex       # OSS request model
+│   │   ├── config.ex         # Configuration model
+│   │   ├── http.ex           # HTTP request/response models
+│   │   └── request.ex        # OSS request model
 │   └── http/
-│       └── finch.ex         # Finch HTTP client
+│       └── finch.ex          # Finch HTTP client
 ```
 
 ## Usage Pattern
@@ -129,16 +142,26 @@ Supervisor.start_link(children, strategy: :one_for_one)
 
 ## Supported Operations
 
-### Object Operations
+### Object Operations (`LibOss.Api.Object`)
 - Basic CRUD: put, get, delete objects
 - Copy objects between buckets
 - Append write functionality
 - Metadata retrieval (head, get_object_meta)
-- ACL management
-- Symlink operations
-- Tagging operations
 
-### Multipart Upload
+### Access Control Management (`LibOss.Api.Acl`)
+- Object ACL management
+- Bucket ACL management
+
+### Symlink Operations (`LibOss.Api.Symlink`)
+- Create symbolic links
+- Retrieve symlink targets
+
+### Tagging Operations (`LibOss.Api.Tagging`)
+- Set/update object tags
+- Retrieve object tags
+- Delete object tags
+
+### Multipart Upload (`LibOss.Api.Multipart`)
 - Initiate multipart upload
 - Upload individual parts
 - Complete multipart upload
@@ -146,14 +169,13 @@ Supervisor.start_link(children, strategy: :one_for_one)
 - List multipart uploads
 - List uploaded parts
 
-### Bucket Operations
+### Bucket Operations (`LibOss.Api.Bucket`)
 - Create/delete buckets
 - List bucket contents (v1 and v2)
 - Bucket information retrieval
 - Bucket location and statistics
-- Bucket ACL management
 
-### Web Upload Token Generation
+### Web Upload Token Generation (`LibOss.Api.Token`)
 - Generate signed tokens for direct browser uploads
 - Support for callback URLs
 
@@ -170,7 +192,7 @@ Key dependencies and their purposes:
 - **finch**: HTTP client for making requests
 - **nimble_options**: Configuration validation
 - **jason**: JSON encoding/decoding
-- **elixir_xml_to_map**: XML parsing for OSS responses
+- **sweet_xml**: XML parsing for OSS responses (replaced elixir_xml_to_map for better stability)
 - **mime**: Content-Type detection
 
 ## Testing

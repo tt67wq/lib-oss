@@ -40,26 +40,29 @@ defmodule LibOss do
 
       defp delegate(method, args), do: apply(Core, method, [__MODULE__ | args])
 
+      # ============================================================================
+      # Web上传令牌生成API
+      # ============================================================================
+
       @doc """
-      function description
       通过Web端直传文件（Object）到OSS的签名生成
 
       Doc: https://help.aliyun.com/document_detail/31926.html
 
-      ## Example
+      ## Examples
 
-          iex> LibOss.get_token(cli, bucket, "/test/test.txt")
+          iex> get_token(bucket, "/test/test.txt")
           {:ok, "{\"accessid\":\"LTAI1k8kxWG8JpUF\",\"callback\":\"=\",\"dir\":\"/test/test.txt\",\".........ePNPyWQo=\"}"}
       """
       @spec get_token(Typespecs.bucket(), Typespecs.object(), non_neg_integer(), binary()) ::
               {:ok, binary()} | err_t()
-      def get_token(bucket, object, expire_sec \\ 3600, callback \\ "")
-
-      def get_token(bucket, object, expire_sec, callback) do
+      def get_token(bucket, object, expire_sec \\ 3600, callback \\ "") do
         delegate(:get_token, [bucket, object, expire_sec, callback])
       end
 
-      #### object operations: https://help.aliyun.com/document_detail/31977.html
+      # ============================================================================
+      # 对象操作API
+      # ============================================================================
 
       @doc """
       调用PutObject接口上传文件（Object）。
@@ -81,7 +84,7 @@ defmodule LibOss do
 
       Doc: https://help.aliyun.com/document_detail/31980.html
 
-      req_headers的具体参数可参考文档中”请求头“部分说明
+      req_headers的具体参数可参考文档中"请求头"部分说明
 
       ## Examples
 
@@ -136,10 +139,9 @@ defmodule LibOss do
 
       ## Examples
 
-          iex> delete_multiple_objects(bucket, ["/test/test_1.txt", "/test/test_2.txt"]])
+          iex> delete_multiple_objects(bucket, ["/test/test_1.txt", "/test/test_2.txt"])
           :ok
       """
-
       @spec delete_multiple_objects(Typespecs.bucket(), [Typespecs.object()]) :: :ok | err_t()
       def delete_multiple_objects(bucket, objects) do
         delegate(:delete_multiple_objects, [bucket, objects])
@@ -163,8 +165,7 @@ defmodule LibOss do
               non_neg_integer(),
               binary(),
               Typespecs.headers()
-            ) ::
-              :ok | err_t()
+            ) :: :ok | err_t()
       def append_object(bucket, object, since, data, headers \\ []) do
         delegate(:append_object, [bucket, object, since, data, headers])
       end
@@ -202,7 +203,7 @@ defmodule LibOss do
       end
 
       @doc """
-      调用GetObjectMeta接口获取一个文件（Object）的元数据信息，包括该Object的ETag、Size、LastModified信息，并且不返回该Object的内容。
+      GetObjectMeta接口用于获取某个文件（Object）的基本元信息，包括该Object的ETag、Size、LastModified信息，并不返回该Object的内容。
 
       Doc: https://help.aliyun.com/document_detail/31985.html
 
@@ -211,20 +212,13 @@ defmodule LibOss do
           iex> get_object_meta(bucket, "/test/test.txt")
           {:ok,
            %{
-             "accept-ranges" => "bytes",
              "connection" => "keep-alive",
              "content-length" => "11",
-             "content-md5" => "XrY7u+Ae7tCTyyK7j1rNww==",
-             "content-type" => "text/plain",
-             "date" => "Tue, 18 Jul 2023 06:29:10 GMT",
+             "date" => "Tue, 18 Jul 2023 06:27:36 GMT",
              "etag" => "\"5EB63BBBE01EEED093CB22BB8F5ACDC3\"",
              "last-modified" => "Tue, 18 Jul 2023 06:27:33 GMT",
              "server" => "AliyunOSS",
-             "x-oss-hash-crc64ecma" => "5981764153023615706",
-             "x-oss-object-type" => "Normal",
-             "x-oss-request-id" => "64B631365A8AEE32306C9D64",
-             "x-oss-server-time" => "2",
-             "x-oss-storage-class" => "Standard"
+             "x-oss-request-id" => "64B630D8E0DCB93335001975"
            }}
       """
       @spec get_object_meta(Typespecs.bucket(), Typespecs.object()) ::
@@ -233,14 +227,19 @@ defmodule LibOss do
         delegate(:get_object_meta, [bucket, object])
       end
 
+      # ============================================================================
+      # ACL管理API
+      # ============================================================================
+
       @doc """
-      调用PutObjectACL接口修改文件（Object）的访问权限（ACL）
+      调用PutObjectACL接口修改文件（Object）的访问权限（ACL）。
 
       Doc: https://help.aliyun.com/document_detail/31986.html
 
       ## Examples
 
           iex> put_object_acl(bucket, "/test/test.txt", "public-read")
+          :ok
       """
       @spec put_object_acl(Typespecs.bucket(), Typespecs.object(), String.t()) :: :ok | err_t()
       def put_object_acl(bucket, object, acl) do
@@ -262,6 +261,10 @@ defmodule LibOss do
       def get_object_acl(bucket, object) do
         delegate(:get_object_acl, [bucket, object])
       end
+
+      # ============================================================================
+      # 符号链接API
+      # ============================================================================
 
       @doc """
       调用PutSymlink接口用于为OSS的目标文件（TargetObject）创建软链接（Symlink）
@@ -294,6 +297,10 @@ defmodule LibOss do
       def get_symlink(bucket, object) do
         delegate(:get_symlink, [bucket, object])
       end
+
+      # ============================================================================
+      # 标签管理API
+      # ============================================================================
 
       @doc """
       调用PutObjectTagging接口设置或更新对象（Object）的标签（Tagging）信息。
@@ -347,7 +354,9 @@ defmodule LibOss do
         delegate(:delete_object_tagging, [bucket, object])
       end
 
-      # ~~~~~~~~~~~~~~~~~~~~~~~~ bucket operations: https://help.aliyun.com/document_detail/31959.html ~~~~~~~~~~~~~~~~~~~~~~~~
+      # ============================================================================
+      # 存储桶操作API
+      # ============================================================================
 
       @doc """
       调用PutBucket接口创建存储空间（Bucket）。
@@ -360,9 +369,7 @@ defmodule LibOss do
           :ok
       """
       @spec put_bucket(Typespecs.bucket(), String.t(), String.t(), Typespecs.headers()) :: :ok | err_t()
-      def put_bucket(bucket, storage_class \\ "Standard", data_redundancy_type \\ "LRS", headers \\ [])
-
-      def put_bucket(bucket, storage_class, data_redundancy_type, headers) do
+      def put_bucket(bucket, storage_class \\ "Standard", data_redundancy_type \\ "LRS", headers \\ []) do
         delegate(:put_bucket, [bucket, storage_class, data_redundancy_type, headers])
       end
 
@@ -466,8 +473,109 @@ defmodule LibOss do
         delegate(:list_object_v2, [bucket, query_params])
       end
 
-      # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  multipart operations  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      # #### multipart operations: https://help.aliyun.com/document_detail/155825.html
+      @doc """
+      调用GetBucketInfo接口获取某个存储空间（Bucket）的相关信息。
+
+      Doc: https://help.aliyun.com/document_detail/31968.html
+
+      ## Examples
+
+          iex> get_bucket_info(bucket)
+          {:ok,
+           %{
+             "BucketInfo" => %{
+               "Bucket" => %{
+                 "AccessControlList" => %{"Grant" => "private"},
+                 "CreationDate" => "2023-07-07T12:57:30.000Z",
+                 "ExtranetEndpoint" => "oss-cn-beijing.aliyuncs.com",
+                 "IntranetEndpoint" => "oss-cn-beijing-internal.aliyuncs.com",
+                 "Location" => "oss-cn-beijing",
+                 "Name" => "test-bucket",
+                 "Owner" => %{"DisplayName" => "1074124462684153", "ID" => "1074124462684153"},
+                 "StorageClass" => "Standard"
+               }
+             }
+           }}
+      """
+      @spec get_bucket_info(Typespecs.bucket()) :: {:ok, Typespecs.dict()} | err_t()
+      def get_bucket_info(bucket) do
+        delegate(:get_bucket_info, [bucket])
+      end
+
+      @doc """
+      调用GetBucketLocation接口获取存储空间（Bucket）的位置信息。
+
+      Doc: https://help.aliyun.com/document_detail/31967.html
+
+      ## Examples
+
+          iex> get_bucket_location(bucket)
+          {:ok, "oss-cn-beijing"}
+      """
+      @spec get_bucket_location(Typespecs.bucket()) ::
+              {:ok, binary()} | err_t()
+      def get_bucket_location(bucket) do
+        delegate(:get_bucket_location, [bucket])
+      end
+
+      @doc """
+      调用GetBucketStat接口获取指定存储空间（Bucket）的存储容量以及文件（Object）数量。
+
+      Doc: https://help.aliyun.com/document_detail/47572.html
+
+      ## Examples
+
+          iex> get_bucket_stat(bucket)
+          {:ok,
+           %{
+             "BucketStat" => %{
+               "LastModifiedTime" => "1689855033",
+               "ObjectCount" => "7",
+               "Storage" => "1001100",
+               "StandardStorage" => "1001100"
+             }
+           }}
+      """
+      @spec get_bucket_stat(Typespecs.bucket()) ::
+              {:ok, Typespecs.dict()} | err_t()
+      def get_bucket_stat(bucket) do
+        delegate(:get_bucket_stat, [bucket])
+      end
+
+      @doc """
+      调用PutBucketAcl接口设置或修改存储空间（Bucket）的访问权限（ACL）。
+
+      Doc: https://help.aliyun.com/document_detail/31976.html
+
+      ## Examples
+
+          iex> put_bucket_acl(bucket, "public-read")
+          :ok
+      """
+      @spec put_bucket_acl(Typespecs.bucket(), String.t()) :: :ok | err_t()
+      def put_bucket_acl(bucket, acl) do
+        delegate(:put_bucket_acl, [bucket, acl])
+      end
+
+      @doc """
+      调用GetBucketAcl接口获取某个存储空间（Bucket）的访问权限（ACL）。
+
+      Doc: https://help.aliyun.com/document_detail/31975.html
+
+      ## Examples
+
+          iex> get_bucket_acl(bucket)
+          {:ok, "public-read"}
+      """
+      @spec get_bucket_acl(Typespecs.bucket()) ::
+              {:ok, binary()} | err_t()
+      def get_bucket_acl(bucket) do
+        delegate(:get_bucket_acl, [bucket])
+      end
+
+      # ============================================================================
+      # 多部分上传API
+      # ============================================================================
 
       @doc """
       使用Multipart Upload模式传输数据前，您必须先调用InitiateMultipartUpload接口来通知OSS初始化一个Multipart Upload事件。
@@ -476,7 +584,7 @@ defmodule LibOss do
 
       ## Examples
 
-          iex> init_multi_uploads(bucket, "test.txt")
+          iex> init_multi_upload(bucket, "test.txt")
           {:ok, "upload_id"}
       """
       @spec init_multi_upload(
@@ -650,133 +758,6 @@ defmodule LibOss do
               {:ok, list(Typespecs.dict())} | err_t()
       def list_parts(bucket, object, upload_id, query_params \\ %{}) do
         delegate(:list_parts, [bucket, object, upload_id, query_params])
-      end
-
-      @doc """
-      调用GetBucketInfo接口查看存储空间（Bucket）的相关信息。
-
-      Doc: https://help.aliyun.com/document_detail/31968.html
-
-      ## Examples
-
-          iex> get_bucket_info(bucket)
-          {:ok,
-           %{
-             "Bucket" => %{
-               "AccessControlList" => %{"Grant" => "public-read"},
-               "AccessMonitor" => "Disabled",
-               "BucketPolicy" => %{"LogBucket" => nil, "LogPrefix" => nil},
-               "Comment" => nil,
-               "CreationDate" => "2022-08-02T14:59:56.000Z",
-               "CrossRegionReplication" => "Disabled",
-               "DataRedundancyType" => "LRS",
-               "ExtranetEndpoint" => "oss-cn-shenzhen.aliyuncs.com",
-               "IntranetEndpoint" => "oss-cn-shenzhen-internal.aliyuncs.com",
-               "Location" => "oss-cn-shenzhen",
-               "Name" => "xxxx-data",
-               "Owner" => %{
-                 "DisplayName" => "1074124462684153",
-                 "ID" => "1074124462684153"
-               },
-               "ResourceGroupId" => "rg-acfmv47nudzpp6i",
-               "ServerSideEncryptionRule" => %{"SSEAlgorithm" => "None"},
-               "StorageClass" => "Standard",
-               "TransferAcceleration" => "Enabled"
-             }
-           }}
-      """
-      @spec get_bucket_info(Typespecs.bucket()) :: {:ok, Typespecs.dict()} | err_t()
-      def get_bucket_info(bucket) do
-        delegate(:get_bucket_info, [bucket])
-      end
-
-      @doc """
-      GetBucketLocation接口用于查看存储空间（Bucket）的位置信息。
-
-      Doc: https://help.aliyun.com/document_detail/31967.html
-
-      ## Examples
-
-          iex> get_bucket_location(bucket)
-          {:ok, "oss-cn-shenzhen"}
-      """
-      @spec get_bucket_location(Typespecs.bucket()) :: {:ok, String.t()} | err_t()
-      def get_bucket_location(bucket) do
-        delegate(:get_bucket_location, [bucket])
-      end
-
-      @doc """
-      调用GetBucketStat接口获取指定存储空间（Bucket）的存储容量以及文件（Object）数量。
-
-      Doc: https://help.aliyun.com/document_detail/426056.html
-
-      ## Examples
-
-          iex> get_bucket_stat(bucket)
-          {:ok, {:ok,
-           %{
-             "ArchiveObjectCount" => "0",
-             "ArchiveRealStorage" => "0",
-             "ArchiveStorage" => "0",
-             "ColdArchiveObjectCount" => "0",
-             "ColdArchiveRealStorage" => "0",
-             "ColdArchiveStorage" => "0",
-             "DeepColdArchiveObjectCount" => "0",
-             "DeepColdArchiveRealStorage" => "0",
-             "DeepColdArchiveStorage" => "0",
-             "DeleteMarkerCount" => "0",
-             "InfrequentAccessObjectCount" => "0",
-             "InfrequentAccessRealStorage" => "0",
-             "InfrequentAccessStorage" => "0",
-             "LastModifiedTime" => "1690118142",
-             "LiveChannelCount" => "0",
-             "MultipartPartCount" => "59",
-             "MultipartUploadCount" => "30",
-             "ObjectCount" => "5413",
-             "ReservedCapacityObjectCount" => "0",
-             "ReservedCapacityStorage" => "0",
-             "StandardObjectCount" => "5413",
-             "StandardStorage" => "9619258561",
-             "Storage" => "9619258561"
-           }}
-      """
-      @spec get_bucket_stat(Typespecs.bucket()) :: {:ok, Typespecs.dict()} | err_t()
-      def get_bucket_stat(bucket) do
-        delegate(:get_bucket_stat, [bucket])
-      end
-
-      @doc """
-      PutBucketAcl接口用于设置或修改存储空间（Bucket）的访问权限（ACL）。
-
-      Doc: https://help.aliyun.com/document_detail/31960.html
-
-      ## Examples
-
-          iex> put_bucket_acl(bucket, "public-read")
-          :ok
-      """
-      @spec put_bucket_acl(Typespecs.bucket(), Typespecs.acl()) :: :ok | err_t()
-      def put_bucket_acl(bucket, acl) do
-        delegate(:put_bucket_acl, [bucket, acl])
-      end
-
-      @doc """
-      GetBucketAcl接口用于获取某个存储空间（Bucket）的访问权限（ACL）。
-
-      Doc: https://help.aliyun.com/document_detail/31966.html
-
-      ## Examples
-
-          iex> get_bucket_acl(cli, bucket)
-          {:ok,
-          %{
-             "AccessControlList" => %{"Grant" => "public-read"},
-             "Owner" => %{"DisplayName" => "107412446268415", "ID" => "107412446264153"}
-           }}
-      """
-      @spec get_bucket_acl(Typespecs.bucket()) :: {:ok, Typespecs.acl()} | err_t()
-      def get_bucket_acl(bucket) do
-        delegate(:get_bucket_acl, [bucket])
       end
     end
   end
