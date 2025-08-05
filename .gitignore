@@ -26,3 +26,5 @@ lib_oss-*.tar
 /tmp/
 
 .env
+
+/.claude/

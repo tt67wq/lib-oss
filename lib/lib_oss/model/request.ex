@@ -107,7 +107,7 @@ defmodule LibOss.Model.Request do
     |> string_to_sign()
     |> tap(fn x ->
       if request.debug do
-        LibOss.Utils.stacktrace(%{
+        LibOss.Debug.stacktrace(%{
           request: request,
           config: config,
           string_to_sign: x
