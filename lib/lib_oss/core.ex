@@ -11,26 +11,21 @@ defmodule LibOss.Core do
 
   @type err_t() :: {:error, Exception.t()}
 
-  @http_impl LibOss.Http.Finch
   @callback_body """
   filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}
   """
 
-  def start_link({name, http_name, config}) do
+  def start_link({name, http, config}) do
     config =
       config
       |> Config.validate!()
-      |> Keyword.put(:http_name, http_name)
+      |> Keyword.put(:http, http)
 
     Agent.start_link(fn -> config end, name: name)
   end
 
   def get(name) do
     Agent.get(name, & &1)
-  end
-
-  defp call_http(name, req) do
-    apply(@http_impl, :do_request, [name, req])
   end
 
   @spec make_request(Config.t(), Request.t()) :: Http.Request.t()
@@ -81,7 +76,7 @@ defmodule LibOss.Core do
   @spec call(Config.t(), Request.t()) :: {:ok, Http.Response.t()} | err_t()
   defp call(config, req) do
     http_req = make_request(config, req)
-    call_http(config[:http_name], http_req)
+    LibOss.Http.do_request(config[:http], http_req)
   end
 
   @spec get_token(module(), Typespecs.bucket(), Typespecs.object(), non_neg_integer(), binary()) ::

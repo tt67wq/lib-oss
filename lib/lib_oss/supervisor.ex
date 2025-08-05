@@ -13,8 +13,7 @@ defmodule LibOss.Supervisor do
     children =
       [
         {Finch, name: finch_name(name)},
-        {LibOss.Http.Finch, {finch_name(name), http_name(name)}},
-        {LibOss.Core, {name, http_name(name), config}}
+        {LibOss.Core, {name, %LibOss.Http.Finch{finch_name: finch_name(name)}, config}}
       ]
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -26,9 +25,5 @@ defmodule LibOss.Supervisor do
 
   defp finch_name(name) do
     Module.concat(name, Finch)
-  end
-
-  defp http_name(name) do
-    Module.concat(name, Http)
   end
 end

@@ -24,3 +24,5 @@ lib_oss-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+.env
