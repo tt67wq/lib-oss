@@ -45,10 +45,8 @@ defmodule LibOss.Xml do
 
   # Private functions
 
-  defp convert_element_to_map(
-         {:xmlElement, name, _expanded_name, _nsinfo, _namespace, _parents, _pos, attrs, children, _language, _xmlbase,
-          _elementdef}
-       ) do
+  defp convert_element_to_map(xml_element) when elem(xml_element, 0) == :xmlElement do
+    {name, attrs, children} = extract_element_parts(xml_element)
     tag_name = Atom.to_string(name)
     content = process_children(children)
 
@@ -60,7 +58,8 @@ defmodule LibOss.Xml do
     end
   end
 
-  defp convert_element_to_map({:xmlText, _parents, _pos, _language, text, _type}) do
+  defp convert_element_to_map(xml_text) when elem(xml_text, 0) == :xmlText do
+    text = extract_text_content(xml_text)
     text |> to_string() |> String.trim()
   end
 
@@ -71,37 +70,53 @@ defmodule LibOss.Xml do
   end
 
   defp process_children(children) do
-    # Filter out whitespace-only text nodes
-    meaningful_children =
-      Enum.filter(children, fn
-        {:xmlText, _, _, _, text, _} ->
-          text |> to_string() |> String.trim() != ""
+    children
+    |> filter_meaningful_children()
+    |> handle_children()
+  end
 
-        _ ->
-          true
-      end)
+  defp filter_meaningful_children(children) do
+    Enum.filter(children, fn
+      xml_text when elem(xml_text, 0) == :xmlText ->
+        text = extract_text_content(xml_text)
+        text |> to_string() |> String.trim() != ""
 
-    case meaningful_children do
-      [] ->
-        ""
+      _ ->
+        true
+    end)
+  end
 
-      [{:xmlText, _, _, _, text, _}] ->
-        text |> to_string() |> String.trim()
+  defp handle_children([]) do
+    ""
+  end
 
-      [single_element] ->
-        case convert_element_to_map(single_element) do
-          map when is_map(map) ->
-            map
+  defp handle_children([xml_text]) when elem(xml_text, 0) == :xmlText do
+    text = extract_text_content(xml_text)
+    text |> to_string() |> String.trim()
+  end
 
-          other ->
-            other
-        end
+  defp handle_children([single_element]) do
+    handle_single_child(single_element)
+  end
 
-      multiple_children ->
-        # Convert all children and group by tag name
-        converted = Enum.map(multiple_children, &convert_element_to_map/1)
-        group_by_tag_name(converted)
+  defp handle_children(multiple_children) do
+    handle_multiple_children(multiple_children)
+  end
+
+  defp handle_single_child(element) do
+    case convert_element_to_map(element) do
+      map when is_map(map) ->
+        map
+
+      other ->
+        other
     end
+  end
+
+  defp handle_multiple_children(children) do
+    children
+    |> Enum.map(&convert_element_to_map/1)
+    |> group_by_tag_name()
   end
 
   defp group_by_tag_name(elements) do
@@ -124,6 +139,17 @@ defmodule LibOss.Xml do
       _non_map, acc ->
         acc
     end)
+  end
+
+  defp extract_element_parts(
+         {:xmlElement, name, _expanded_name, _nsinfo, _namespace, _parents, _pos, attrs, children, _language, _xmlbase,
+          _elementdef}
+       ) do
+    {name, attrs, children}
+  end
+
+  defp extract_text_content({:xmlText, _parents, _pos, _language, text, _type}) do
+    text
   end
 
   defp add_attributes_to_map(element_map, tag_name, attrs) do
