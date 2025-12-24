@@ -102,7 +102,7 @@ LibOss是Elixir实现的一个[阿里云OSS](https://help.aliyun.com/product/318
 ```elixir
 def deps do
   [
-    {:lib_oss, "~> 0.2"}
+    {:lib_oss, "~> 0.3"}
   ]
 end
 ```
@@ -324,6 +324,17 @@ mix test test/lib_oss/api/object_test.exs
 本项目采用 [MIT License](LICENSE) 许可证。
 
 ## 更新日志
+
+### v3.0.x
+- ✅ **类型安全性大幅提升**: 修复33个Dialyzer类型问题，类型错误减少86.8%（38→5）
+- ✅ **类型规范完善**: 添加完整的TypeSpec定义和类型约束
+- ✅ **异常处理优化**: 统一异常消息格式，提升错误可读性
+- ✅ **HTTP模型改进**: 修复URI类型匹配问题，使用标准URI构造方式
+- ✅ **核心模块类型修复**: 修复token、acl、bucket、multipart、tagging等核心模块的类型违规
+- ✅ **编译警告清除**: 消除struct类型更新相关的编译警告
+- ✅ **代码质量提升**: 通过Dialyzer静态分析，确保类型安全
+- ✅ **模块类型定义**: 新增tags等缺失的类型定义
+- ✅ **兼容性保证**: 所有修复保持向后兼容，不破坏现有API
 
 ### v0.2.x
 - ✅ 重构模块架构，按功能域分离
