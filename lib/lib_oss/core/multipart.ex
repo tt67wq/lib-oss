@@ -60,7 +60,7 @@ defmodule LibOss.Core.Multipart do
     with {:ok, %Http.Response{body: body}} <- Core.call(name, req),
          {:ok, xml} <- ResponseParser.parse_xml_response(body) do
       case ResponseParser.extract_from_xml(xml, "UploadId") do
-        nil -> {:error, Exception.new(:invalid_response, "UploadId not found in response")}
+        nil -> {:error, Exception.new("invalid_response: UploadId not found in response", "missing_upload_id")}
         upload_id -> {:ok, upload_id}
       end
     end
@@ -112,7 +112,7 @@ defmodule LibOss.Core.Multipart do
       with {:ok, %Http.Response{headers: headers}} <- Core.call(name, req) do
         case find_etag_header(headers) do
           {:ok, etag} -> {:ok, etag}
-          :error -> {:error, Exception.new(:etag_not_found, "ETag header not found in response")}
+          :error -> {:error, Exception.new("etag_not_found: ETag header not found in response", "missing_etag")}
         end
       end
     end
@@ -336,13 +336,14 @@ defmodule LibOss.Core.Multipart do
 
     cond do
       part_size < @min_part_size ->
-        {:error, Exception.new(:invalid_part_size, "Part size must be at least #{@min_part_size} bytes")}
+        {:error, Exception.new("invalid_part_size: Part size must be at least #{@min_part_size} bytes", part_size)}
 
       part_size > @max_part_size ->
-        {:error, Exception.new(:invalid_part_size, "Part size cannot exceed #{@max_part_size} bytes")}
+        {:error, Exception.new("invalid_part_size: Part size cannot exceed #{@max_part_size} bytes", part_size)}
 
       part_count > @max_parts ->
-        {:error, Exception.new(:too_many_parts, "File would require #{part_count} parts, maximum is #{@max_parts}")}
+        {:error,
+         Exception.new("too_many_parts: File would require #{part_count} parts, maximum is #{@max_parts}", part_count)}
 
       true ->
         :ok
@@ -377,7 +378,11 @@ defmodule LibOss.Core.Multipart do
   defp validate_part_number(part_number) when part_number >= 1 and part_number <= @max_parts, do: :ok
 
   defp validate_part_number(part_number) do
-    {:error, Exception.new(:invalid_part_number, "Part number must be between 1 and #{@max_parts}, got #{part_number}")}
+    {:error,
+     Exception.new(
+       "invalid_part_number: Part number must be between 1 and #{@max_parts}, got #{part_number}",
+       part_number
+     )}
   end
 
   defp validate_part_size(data) when byte_size(data) >= @min_part_size, do: :ok
@@ -385,13 +390,14 @@ defmodule LibOss.Core.Multipart do
   defp validate_part_size(data) when byte_size(data) > 0, do: :ok
 
   defp validate_part_size(data) do
-    {:error, Exception.new(:invalid_part_size, "Part size is #{byte_size(data)} bytes, must be at least 1 byte")}
+    {:error,
+     Exception.new("invalid_part_size: Part size is #{byte_size(data)} bytes, must be at least 1 byte", byte_size(data))}
   end
 
-  defp validate_parts_list([]), do: {:error, Exception.new(:empty_parts_list, "Parts list cannot be empty")}
+  defp validate_parts_list([]), do: {:error, Exception.new("empty_parts_list: Parts list cannot be empty", [])}
 
   defp validate_parts_list(parts) when length(parts) > @max_parts do
-    {:error, Exception.new(:too_many_parts, "Cannot have more than #{@max_parts} parts")}
+    {:error, Exception.new("too_many_parts: Cannot have more than #{@max_parts} parts", length(parts))}
   end
 
   defp validate_parts_list(parts) do
@@ -403,7 +409,7 @@ defmodule LibOss.Core.Multipart do
     if sorted_numbers == expected_numbers and length(Enum.uniq(part_numbers)) == length(parts) do
       :ok
     else
-      {:error, Exception.new(:invalid_parts_list, "Part numbers must be consecutive and unique starting from 1")}
+      {:error, Exception.new("invalid_parts_list: Part numbers must be consecutive and unique starting from 1", parts)}
     end
   end
 

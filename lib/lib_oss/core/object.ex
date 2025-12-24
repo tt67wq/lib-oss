@@ -276,7 +276,7 @@ defmodule LibOss.Core.Object do
     case head_object(name, bucket, object) do
       {:ok, headers} ->
         case Map.get(headers, "content-length") do
-          nil -> {:error, Exception.new(:missing_content_length, "Content-Length header not found")}
+          nil -> {:error, Exception.new("missing_content_length: Content-Length header not found", "missing_header")}
           size_str -> {:ok, String.to_integer(size_str)}
         end
 

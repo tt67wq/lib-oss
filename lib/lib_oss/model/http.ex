@@ -11,7 +11,7 @@ defmodule LibOss.Model.Http do
     @type t :: %__MODULE__{
             scheme: String.t(),
             host: String.t(),
-            port: non_neg_integer(),
+            port: char(),
             method: Typespecs.method(),
             path: binary(),
             headers: Typespecs.headers(),
@@ -31,13 +31,16 @@ defmodule LibOss.Model.Http do
           URI.encode_query(params)
         end
 
-      %URI{
-        scheme: scheme,
-        host: host,
-        path: path,
-        query: query,
-        port: port
-      }
+      # Build complete URI string then parse it
+      port_part =
+        if port != 443 and port != 80 do
+          ":#{port}"
+        else
+          ""
+        end
+
+      uri_string = "#{scheme}://#{host}#{port_part}#{path}#{if(query, do: "?#{query}", else: "")}"
+      URI.parse(uri_string)
     end
   end
 

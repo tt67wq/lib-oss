@@ -28,3 +28,4 @@ lib_oss-*.tar
 .env
 
 /.claude/
+/.agents/

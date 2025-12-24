@@ -7,7 +7,7 @@ defmodule LibOss.Typespecs do
   @type opts :: keyword()
   @type host :: String.t()
   @type method :: :get | :post | :head | :patch | :delete | :options | :put
-  @type headers :: [{String.t(), String.t()}]
+  @type headers :: [{String.t(), String.t() | binary()}]
   @type body :: iodata() | nil
   @type params :: %{String.t() => binary()}
   @type http_status :: non_neg_integer()
@@ -24,4 +24,5 @@ defmodule LibOss.Typespecs do
   @type upload_id :: binary()
   @type part_num :: non_neg_integer()
   @type etag :: binary()
+  @type tags :: %{String.t() => String.t()}
 end

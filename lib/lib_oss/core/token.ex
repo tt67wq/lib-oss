@@ -154,7 +154,7 @@ defmodule LibOss.Core.Token do
   def parse_token(token) when is_binary(token) do
     case Jason.decode(token) do
       {:ok, parsed} -> {:ok, parsed}
-      {:error, reason} -> {:error, Exception.new(:invalid_token, "Failed to parse token: #{inspect(reason)}")}
+      {:error, reason} -> {:error, Exception.new("invalid_token: Failed to parse token: #{inspect(reason)}", reason)}
     end
   end
 
@@ -182,7 +182,7 @@ defmodule LibOss.Core.Token do
         {:ok, remaining}
 
       {:ok, _} ->
-        {:error, Exception.new(:invalid_token, "Token does not contain expire field")}
+        {:error, Exception.new("invalid_token: Token does not contain expire field", "missing_expire")}
 
       {:error, _} = error ->
         error
@@ -258,7 +258,7 @@ defmodule LibOss.Core.Token do
         {:ok, encoded_policy}
 
       {:error, reason} ->
-        {:error, Exception.new(:policy_encode_error, "Failed to encode policy: #{inspect(reason)}")}
+        {:error, Exception.new("policy_encode_error: Failed to encode policy: #{inspect(reason)}", reason)}
     end
   end
 
@@ -274,7 +274,7 @@ defmodule LibOss.Core.Token do
         {:ok, encoded_policy}
 
       {:error, reason} ->
-        {:error, Exception.new(:policy_encode_error, "Failed to encode custom policy: #{inspect(reason)}")}
+        {:error, Exception.new("policy_encode_error: Failed to encode custom policy: #{inspect(reason)}", reason)}
     end
   end
 
@@ -283,7 +283,7 @@ defmodule LibOss.Core.Token do
     {:ok, signature}
   rescue
     e ->
-      {:error, Exception.new(:signature_error, "Failed to sign policy: #{Exception.message(e)}")}
+      {:error, Exception.new("signature_error: Failed to sign policy: #{Exception.message(e)}", e)}
   end
 
   defp build_callback_data(""), do: {:ok, ""}
@@ -301,7 +301,7 @@ defmodule LibOss.Core.Token do
         {:ok, encoded_callback}
 
       {:error, reason} ->
-        {:error, Exception.new(:callback_encode_error, "Failed to encode callback: #{inspect(reason)}")}
+        {:error, Exception.new("callback_encode_error: Failed to encode callback: #{inspect(reason)}", reason)}
     end
   end
 
@@ -317,8 +317,11 @@ defmodule LibOss.Core.Token do
     }
 
     case Jason.encode(token_map) do
-      {:ok, json} -> {:ok, json}
-      {:error, reason} -> {:error, Exception.new(:token_encode_error, "Failed to encode token: #{inspect(reason)}")}
+      {:ok, json} ->
+        {:ok, json}
+
+      {:error, reason} ->
+        {:error, Exception.new("token_encode_error: Failed to encode token: #{inspect(reason)}", reason)}
     end
   end
 end

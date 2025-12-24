@@ -47,7 +47,7 @@ defimpl LibOss.Http, for: LibOss.Http.Finch do
     * `{:error, error}` - 请求失败
   """
   @spec do_request(LibOss.Http.Finch.t(), Http.Request.t()) ::
-          {:ok, Http.Response.t()} | {:error, LibOss.Error.t()}
+          {:ok, Http.Response.t()} | {:error, LibOss.Exception.t()}
   def do_request(%LibOss.Http.Finch{finch_name: finch_name}, req) do
     opts = opts(req.opts)
 
