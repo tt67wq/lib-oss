@@ -363,11 +363,11 @@ defmodule LibOss.Config.Validator do
     "access_key_secret 必须是字符串类型"
   end
 
-  defp format_error(error) when is_binary(error) do
-    error
-  end
+  # defp format_error(error) when is_binary(error) do
+  #   error
+  # end
 
-  defp format_error(error) do
-    "配置验证失败: #{inspect(error)}"
-  end
+  # defp format_error(error) do
+  #   "配置验证失败: #{inspect(error)}"
+  # end
 end

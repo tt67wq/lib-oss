@@ -25,7 +25,7 @@ defmodule LibOss.Core.ResponseParser do
         parse_error_response(body, code, headers)
 
       code ->
-        {:error, Exception.new(:unexpected_status_code, "Unexpected status code: #{code}")}
+        {:error, Exception.new("unexpected_status_code: Unexpected status code: #{code}", code)}
     end
   end
 
@@ -39,18 +39,14 @@ defmodule LibOss.Core.ResponseParser do
   ## 返回值
   - {:ok, parsed_xml} | {:error, Exception.t()}
   """
-  @spec parse_xml_response(binary(), binary() | nil) :: {:ok, any()} | {:error, Exception.t()}
+  @spec parse_xml_response(binary(), binary() | nil) :: {:ok, any()}
   def parse_xml_response(body, extract_path \\ nil) do
-    case LibOss.Xml.naive_map(body) do
-      parsed when is_map(parsed) ->
-        if extract_path do
-          {:ok, extract_from_xml(parsed, extract_path)}
-        else
-          {:ok, parsed}
-        end
+    parsed = LibOss.Xml.naive_map(body)
 
-      _ ->
-        {:error, Exception.new("Failed to parse XML response")}
+    if extract_path do
+      {:ok, extract_from_xml(parsed, extract_path)}
+    else
+      {:ok, parsed}
     end
   end
 
@@ -67,27 +63,17 @@ defmodule LibOss.Core.ResponseParser do
   """
   @spec parse_error_response(binary(), integer(), list()) :: {:error, Exception.t()}
   def parse_error_response(body, status_code, headers) do
-    case parse_xml_response(body) do
-      {:ok, parsed_xml} ->
-        error_code = extract_from_xml(parsed_xml, "Code") || "UnknownError"
-        error_message = extract_from_xml(parsed_xml, "Message") || "Unknown error occurred"
-        request_id = extract_from_xml(parsed_xml, "RequestId") || get_request_id_from_headers(headers)
+    {:ok, parsed_xml} = parse_xml_response(body)
+    error_code = extract_from_xml(parsed_xml, "Code") || "UnknownError"
+    error_message = extract_from_xml(parsed_xml, "Message") || "Unknown error occurred"
+    request_id = extract_from_xml(parsed_xml, "RequestId") || get_request_id_from_headers(headers)
 
-        {:error,
-         Exception.new("#{error_code}: #{error_message}", %{
-           status_code: status_code,
-           request_id: request_id,
-           headers: headers
-         })}
-
-      {:error, _} ->
-        # 如果XML解析失败，使用状态码创建通用错误
-        {:error,
-         Exception.new("HTTP #{status_code}: #{body}", %{
-           status_code: status_code,
-           headers: headers
-         })}
-    end
+    {:error,
+     Exception.new("#{error_code}: #{error_message}", %{
+       status_code: status_code,
+       request_id: request_id,
+       headers: headers
+     })}
   end
 
   @doc """
