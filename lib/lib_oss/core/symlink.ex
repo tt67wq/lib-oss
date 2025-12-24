@@ -76,8 +76,11 @@ defmodule LibOss.Core.Symlink do
 
     with {:ok, %Http.Response{headers: headers}} <- Core.call(name, req) do
       case find_symlink_target_header(headers) do
-        {:ok, target} -> {:ok, URI.decode(target)}
-        :error -> {:error, Exception.new(:symlink_target_not_found, "x-oss-symlink-target header not found")}
+        {:ok, target} ->
+          {:ok, URI.decode(target)}
+
+        :error ->
+          {:error, Exception.new("symlink_target_not_found: x-oss-symlink-target header not found", "missing_header")}
       end
     end
   end
@@ -145,7 +148,7 @@ defmodule LibOss.Core.Symlink do
            }}
 
         :error ->
-          {:error, Exception.new(:symlink_target_not_found, "x-oss-symlink-target header not found")}
+          {:error, Exception.new("symlink_target_not_found: x-oss-symlink-target header not found", "missing_header")}
       end
     end
   end

@@ -350,8 +350,8 @@ defmodule LibOss.Core.Bucket do
   def validate_storage_class(storage_class) do
     {:error,
      Exception.new(
-       :invalid_storage_class,
-       "Invalid storage class: #{storage_class}. Valid values: #{inspect(@valid_storage_classes)}"
+       "invalid_storage_class: Invalid storage class: #{storage_class}. Valid values: #{inspect(@valid_storage_classes)}",
+       storage_class
      )}
   end
 
@@ -370,8 +370,8 @@ defmodule LibOss.Core.Bucket do
   def validate_redundancy_type(redundancy_type) do
     {:error,
      Exception.new(
-       :invalid_redundancy_type,
-       "Invalid redundancy type: #{redundancy_type}. Valid values: #{inspect(@valid_redundancy_types)}"
+       "invalid_redundancy_type: Invalid redundancy type: #{redundancy_type}. Valid values: #{inspect(@valid_redundancy_types)}",
+       redundancy_type
      )}
   end
 

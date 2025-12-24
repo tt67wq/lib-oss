@@ -233,16 +233,21 @@ defmodule LibOss.Core.Tagging do
 
     cond do
       map_size(normalized_tags) > @max_tags ->
-        {:error, Exception.new(:too_many_tags, "Maximum #{@max_tags} tags allowed, got #{map_size(normalized_tags)}")}
+        {:error,
+         Exception.new(
+           "too_many_tags: Maximum #{@max_tags} tags allowed, got #{map_size(normalized_tags)}",
+           map_size(normalized_tags)
+         )}
 
       Enum.any?(normalized_tags, fn {k, _v} -> String.length(to_string(k)) == 0 end) ->
-        {:error, Exception.new(:empty_tag_key, "Tag key cannot be empty")}
+        {:error, Exception.new("empty_tag_key: Tag key cannot be empty", normalized_tags)}
 
       Enum.any?(normalized_tags, fn {k, _v} -> String.length(to_string(k)) > @max_key_length end) ->
-        {:error, Exception.new(:tag_key_too_long, "Tag key cannot exceed #{@max_key_length} characters")}
+        {:error, Exception.new("tag_key_too_long: Tag key cannot exceed #{@max_key_length} characters", normalized_tags)}
 
       Enum.any?(normalized_tags, fn {_k, v} -> String.length(to_string(v)) > @max_value_length end) ->
-        {:error, Exception.new(:tag_value_too_long, "Tag value cannot exceed #{@max_value_length} characters")}
+        {:error,
+         Exception.new("tag_value_too_long: Tag value cannot exceed #{@max_value_length} characters", normalized_tags)}
 
       true ->
         :ok

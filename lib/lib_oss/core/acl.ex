@@ -122,7 +122,8 @@ defmodule LibOss.Core.Acl do
 
       with {:ok, _} <- Core.call(name, req), do: :ok
     else
-      {:error, Exception.new(:invalid_acl, "Invalid ACL for bucket: #{acl}. Valid values: #{inspect(bucket_valid_acls)}")}
+      {:error,
+       Exception.new("invalid_acl: Invalid ACL for bucket: #{acl}. Valid values: #{inspect(bucket_valid_acls)}", acl)}
     end
   end
 
@@ -178,7 +179,7 @@ defmodule LibOss.Core.Acl do
   def validate_acl(acl) when acl in @valid_acls, do: :ok
 
   def validate_acl(acl) do
-    {:error, Exception.new(:invalid_acl, "Invalid ACL: #{acl}. Valid values: #{inspect(@valid_acls)}")}
+    {:error, Exception.new("invalid_acl: Invalid ACL: #{acl}. Valid values: #{inspect(@valid_acls)}", acl)}
   end
 
   @doc """

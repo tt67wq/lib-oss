@@ -24,4 +24,5 @@ defmodule LibOss.Typespecs do
   @type upload_id :: binary()
   @type part_num :: non_neg_integer()
   @type etag :: binary()
+  @type tags :: %{String.t() => String.t()}
 end
