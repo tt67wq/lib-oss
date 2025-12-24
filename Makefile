@@ -50,3 +50,6 @@ deps.compile: ## 编译项目依赖
 
 deps.tree: ## 显示依赖树状结构
 	@mix deps.tree
+
+publish: ## 发布项目到 Hex
+	@mix hex.publish --yes
