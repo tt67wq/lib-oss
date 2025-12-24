@@ -1,5 +1,60 @@
 defmodule LibOss.Model.Request do
-  @moduledoc false
+  @moduledoc """
+  OSS请求模型和签名模块。
+
+  此模块负责构建、签名和验证OSS API请求，确保所有请求都符合阿里云OSS的认证规范。
+  主要功能包括：
+
+  ## 功能特性
+
+  1. **HTTP头部构建** - 自动生成标准HTTP头部（Host、Content-Type、Date等）
+  2. **OSS签名生成** - 实现OSS专用的HMAC-SHA1签名算法
+  3. **资源规范化** - 按OSS规范格式化CanonicalizedResource
+  4. **多协议支持** - 支持HTTP/HTTPS和RTMP协议
+  5. **调试支持** - 可选开启调试模式输出签名信息
+
+  ## 签名流程
+
+  OSS使用标准的HTTP Authorization头部进行认证：
+
+  ```
+  Authorization: OSS <access_key_id>:<signature>
+  ```
+
+  签名计算过程：
+  1. 构建StringToSign字符串
+  2. 使用HMAC-SHA1算法计算签名
+  3. 将签名添加到Authorization头部
+
+  ## 使用示例
+
+      iex> request = %LibOss.Model.Request{
+      ...>   bucket: "my-bucket",
+      ...>   object: "path/to/file.txt",
+      ...>   method: :get,
+      ...>   body: ""
+      ...> }
+      iex> config = %{endpoint: "oss-cn-hangzhou.aliyuncs.com", access_key_id: "KEY", access_key_secret: "SECRET"}
+      iex> signed_request = LibOss.Model.Request.build_headers(request, config) |> LibOss.Model.Request.auth(config)
+
+  ## 字段说明
+
+  - `host`: 请求主机地址
+  - `method`: HTTP方法（:get, :post, :put, :delete等）
+  - `object`: OSS对象名称
+  - `resource`: 资源路径
+  - `bucket`: 存储桶名称
+  - `headers`: HTTP头部列表
+  - `body`: 请求体
+  - `params`: URL参数
+  - `expires`: 过期时间戳
+  - `debug`: 是否开启调试模式
+
+  ## 相关文档
+
+  - [OSS签名和验证](https://help.aliyun.com/document_detail/100392.html)
+  - [HTTP Authorization头部规范](https://help.aliyun.com/document_detail/100385.html)
+  """
 
   alias LibOss.Model.Config
   alias LibOss.Typespecs

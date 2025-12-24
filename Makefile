@@ -52,4 +52,7 @@ deps.tree: ## 显示依赖树状结构
 	@mix deps.tree
 
 publish: ## 发布项目到 Hex
-	@mix hex.publish --yes
+	@echo "检查Erlang/OTP版本..."
+	@erl -version 2>&1 | grep -q "28\.0" && echo "⚠️  检测到Erlang OTP 28.0，可能存在兼容性问题" || true
+	@echo "开始发布到Hex..."
+	@mix hex.publish --yes || (echo "" && echo "❌ 发布失败！" && echo "可能的解决方案：" && echo "  1. 升级到Erlang OTP 28.1+" && echo "  2. 降级到Erlang OTP 27.x" && echo "  3. 升级Hex: mix local.hex" && exit 1)
