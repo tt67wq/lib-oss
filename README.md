@@ -260,11 +260,6 @@ file_info = files
 |> Enum.map(fn {:ok, result} -> result end)
 ```
 
-## 文档
-
-- 📚 [API使用指南](docs/api_guide.md) - 详细的API文档和示例
-- 💡 [最佳实践](docs/best_practices.md) - 性能优化和安全建议  
-- 🔧 [故障排除](docs/troubleshooting.md) - 常见问题和解决方案
 - 📖 [在线文档](https://hexdocs.pm/lib_oss/LibOss.html) - HexDocs API文档
 
 ## 配置选项
@@ -353,7 +348,6 @@ mix test test/lib_oss/api/object_test.exs
 
 如果您在使用过程中遇到问题：
 
-1. 查看[故障排除指南](docs/troubleshooting.md)
 2. 搜索 [GitHub Issues](https://github.com/your-repo/lib_oss/issues)
 3. 提交新的Issue描述问题
 4. 参考[阿里云OSS官方文档](https://help.aliyun.com/product/31815.html)
