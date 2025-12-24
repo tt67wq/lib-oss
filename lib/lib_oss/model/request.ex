@@ -41,7 +41,7 @@ defmodule LibOss.Model.Request do
             debug: false
 
   @spec build_headers(t(), Config.t()) :: t()
-  def build_headers(request, config) do
+  def build_headers(%__MODULE__{} = request, config) do
     endpoint = config[:endpoint]
 
     host =
@@ -62,7 +62,7 @@ defmodule LibOss.Model.Request do
   end
 
   @spec auth(t(), Config.t()) :: t()
-  def auth(request, config) do
+  def auth(%__MODULE__{} = request, config) do
     headers = [
       {"Authorization", "OSS #{config[:access_key_id]}:#{signature(request, config)}"}
       | request.headers
