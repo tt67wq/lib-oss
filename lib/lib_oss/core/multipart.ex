@@ -34,7 +34,7 @@ defmodule LibOss.Core.Multipart do
   - req_headers: 可选的HTTP请求头
 
   ## 返回值
-  - {:ok, upload_id} | {:error, Exception.t()}
+  - `{:ok, upload_id} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Multipart.init_multi_upload(MyOss, "my-bucket", "large-file.zip")
@@ -78,7 +78,7 @@ defmodule LibOss.Core.Multipart do
   - data: 分片数据
 
   ## 返回值
-  - {:ok, etag} | {:error, Exception.t()}
+  - `{:ok, etag} | {:error, Exception.t()}`
 
   ## 分片限制
   - 分片号范围：1-10000
@@ -132,7 +132,7 @@ defmodule LibOss.Core.Multipart do
   - max-uploads: 最大返回数量
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Multipart.list_multipart_uploads(MyOss, "my-bucket", %{"max-uploads" => "100"})
@@ -249,7 +249,7 @@ defmodule LibOss.Core.Multipart do
   - max-parts: 最大返回数量
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Multipart.list_parts(MyOss, "my-bucket", "large-file.zip", "upload-id-123456")

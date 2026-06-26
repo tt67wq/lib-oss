@@ -27,7 +27,7 @@ defmodule LibOss.Core do
   - {name, http, config}: 包含进程名称、HTTP客户端和配置的元组
 
   ## 返回值
-  - {:ok, pid()} | {:error, term()}
+  - `{:ok, pid()} | {:error, term()}`
   """
   @spec start_link({module(), module(), Config.t()}) :: {:ok, pid()} | {:error, term()}
   def start_link({name, http, config}) do
@@ -62,7 +62,7 @@ defmodule LibOss.Core do
   - req: OSS请求结构
 
   ## 返回值
-  - {:ok, Http.Response.t()} | {:error, Exception.t()}
+  - `{:ok, Http.Response.t()} | {:error, Exception.t()}`
   """
   @spec call(module(), Request.t()) :: {:ok, Http.Response.t()} | err_t()
   def call(name, req) when is_atom(name) do

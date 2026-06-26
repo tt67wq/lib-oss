@@ -74,7 +74,7 @@ defmodule LibOss.Core.Tagging do
   - object: 对象名称
 
   ## 返回值
-  - {:ok, [map()]} | {:error, Exception.t()}
+  - `{:ok, [map()]} | {:error, Exception.t()}`
 
   返回标签列表，每个标签包含key和value字段
 
@@ -155,7 +155,7 @@ defmodule LibOss.Core.Tagging do
   - object: 对象名称
 
   ## 返回值
-  - {:ok, non_neg_integer()} | {:error, Exception.t()}
+  - `{:ok, non_neg_integer()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Tagging.get_tag_count(MyOss, "my-bucket", "my-object")

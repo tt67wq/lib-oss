@@ -90,7 +90,7 @@ defmodule LibOss.Core.Object do
   - req_headers: 可选的HTTP请求头
 
   ## 返回值
-  - {:ok, binary()} | {:error, Exception.t()}
+  - `{:ok, binary()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Object.get_object(MyOss, "my-bucket", "my-object")
@@ -195,7 +195,7 @@ defmodule LibOss.Core.Object do
   - headers: 可选的HTTP请求头
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Object.head_object(MyOss, "my-bucket", "my-object")
@@ -221,7 +221,7 @@ defmodule LibOss.Core.Object do
   - object: 对象名称
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Object.get_object_meta(MyOss, "my-bucket", "my-object")
@@ -265,7 +265,7 @@ defmodule LibOss.Core.Object do
   - object: 对象名称
 
   ## 返回值
-  - {:ok, non_neg_integer()} | {:error, Exception.t()}
+  - `{:ok, non_neg_integer()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Object.get_object_size(MyOss, "my-bucket", "my-object")

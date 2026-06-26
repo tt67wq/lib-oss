@@ -112,7 +112,7 @@ defmodule LibOss.Core.Bucket do
   - delimiter: 分隔符
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Bucket.get_bucket(MyOss, "my-bucket", %{"prefix" => "photos/"})
@@ -148,7 +148,7 @@ defmodule LibOss.Core.Bucket do
   - delimiter: 分隔符
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Bucket.list_object_v2(MyOss, "my-bucket", %{"prefix" => "photos/"})
@@ -179,7 +179,7 @@ defmodule LibOss.Core.Bucket do
   - bucket: 存储桶名称
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   返回的map包含：
   - name: 存储桶名称
@@ -219,7 +219,7 @@ defmodule LibOss.Core.Bucket do
   - bucket: 存储桶名称
 
   ## 返回值
-  - {:ok, String.t()} | {:error, Exception.t()}
+  - `{:ok, String.t()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Bucket.get_bucket_location(MyOss, "my-bucket")
@@ -248,7 +248,7 @@ defmodule LibOss.Core.Bucket do
   - bucket: 存储桶名称
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   返回的map包含：
   - storage: 存储量统计
@@ -308,7 +308,7 @@ defmodule LibOss.Core.Bucket do
   - prefix: 对象名前缀（可选）
 
   ## 返回值
-  - {:ok, non_neg_integer()} | {:error, Exception.t()}
+  - `{:ok, non_neg_integer()} | {:error, Exception.t()}`
 
   注意：这是一个近似值，通过分页获取所有对象计算得出
 

@@ -58,7 +58,7 @@ defmodule LibOss.Core.Symlink do
   - object: 符号链接对象名称
 
   ## 返回值
-  - {:ok, binary()} | {:error, Exception.t()}
+  - `{:ok, binary()} | {:error, Exception.t()}`
 
   返回符号链接指向的目标对象名称
 
@@ -120,7 +120,7 @@ defmodule LibOss.Core.Symlink do
   - object: 符号链接对象名称
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   返回的map包含：
   - target: 目标对象名称

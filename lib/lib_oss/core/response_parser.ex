@@ -13,7 +13,7 @@ defmodule LibOss.Core.ResponseParser do
   - response: HTTP响应结构
 
   ## 返回值
-  - {:ok, parsed_data} | {:error, Exception.t()}
+  - `{:ok, parsed_data} | {:error, Exception.t()}`
   """
   @spec parse_response(Http.Response.t()) :: {:ok, any()} | {:error, Exception.t()}
   def parse_response(%Http.Response{status_code: status_code, body: body, headers: headers}) do
@@ -37,7 +37,7 @@ defmodule LibOss.Core.ResponseParser do
   - extract_path: XML路径，用于提取特定内容 (可选)
 
   ## 返回值
-  - {:ok, parsed_xml} | {:error, Exception.t()}
+  - `{:ok, parsed_xml} | {:error, Exception.t()}`
   """
   @spec parse_xml_response(binary(), binary() | nil) :: {:ok, any()}
   def parse_xml_response(body, extract_path \\ nil) do
@@ -59,7 +59,7 @@ defmodule LibOss.Core.ResponseParser do
   - headers: 响应头
 
   ## 返回值
-  - {:error, Exception.t()}
+  - `{:error, Exception.t()}`
   """
   @spec parse_error_response(binary(), integer(), list()) :: {:error, Exception.t()}
   def parse_error_response(body, status_code, headers) do

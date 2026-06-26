@@ -64,7 +64,7 @@ defmodule LibOss.Core.Acl do
   - object: 对象名称
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   返回的map包含：
   - owner: 所有者信息
@@ -135,7 +135,7 @@ defmodule LibOss.Core.Acl do
   - bucket: 存储桶名称
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   返回的map包含：
   - owner: 所有者信息

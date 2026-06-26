@@ -28,7 +28,7 @@ defmodule LibOss.Core.Token do
   - callback: 回调URL（可选）
 
   ## 返回值
-  - {:ok, binary()} | {:error, Exception.t()}
+  - `{:ok, binary()} | {:error, Exception.t()}`
 
   返回JSON格式的上传令牌，包含：
   - accessid: 访问密钥ID
@@ -81,7 +81,7 @@ defmodule LibOss.Core.Token do
       ]
 
   ## 返回值
-  - {:ok, binary()} | {:error, Exception.t()}
+  - `{:ok, binary()} | {:error, Exception.t()}`
 
   ## 示例
       iex> conditions = [["starts-with", "$key", "photos/"], ["content-length-range", 1, 5242880]]
@@ -139,7 +139,7 @@ defmodule LibOss.Core.Token do
   - token: 令牌JSON字符串
 
   ## 返回值
-  - {:ok, map()} | {:error, Exception.t()}
+  - `{:ok, map()} | {:error, Exception.t()}`
 
   ## 示例
       iex> LibOss.Core.Token.parse_token(token_json)
@@ -165,7 +165,7 @@ defmodule LibOss.Core.Token do
   - token: 令牌JSON字符串
 
   ## 返回值
-  - {:ok, non_neg_integer()} | {:error, Exception.t()}
+  - `{:ok, non_neg_integer()} | {:error, Exception.t()}`
 
   如果令牌已过期，返回0
 
