@@ -6,8 +6,6 @@ defmodule LibOss.Http.Finch do
   Finch 是一个高性能的 HTTP 客户端，适合用于高并发场景。
   """
 
-  alias LibOss.Typespecs
-
   @typedoc """
   Finch HTTP 客户端配置。
 
@@ -29,11 +27,8 @@ defimpl LibOss.Http, for: LibOss.Http.Finch do
 
   alias LibOss.Exception
   alias LibOss.Model.Http
-  alias LibOss.Typespecs
 
-  @spec opts(Typespecs.opts() | nil) :: Typespecs.opts()
-  defp opts(nil), do: [receive_timeout: 5000]
-  defp opts(options), do: Keyword.put_new(options, :receive_timeout, 5000)
+  @default_receive_timeout 5_000
 
   @doc """
   执行 HTTP 请求。
@@ -49,19 +44,19 @@ defimpl LibOss.Http, for: LibOss.Http.Finch do
   @spec do_request(LibOss.Http.Finch.t(), Http.Request.t()) ::
           {:ok, Http.Response.t()} | {:error, LibOss.Exception.t()}
   def do_request(%LibOss.Http.Finch{finch_name: finch_name}, req) do
-    opts = opts(req.opts)
+    req_opts = Keyword.take(req.opts || [], [:pool_timeout, :request_timeout, :pool_strategy])
+    req_opts = Keyword.put_new(req_opts, :receive_timeout, @default_receive_timeout)
 
     finch_req =
       Finch.build(
         req.method,
         Http.Request.url(req),
         req.headers,
-        req.body,
-        opts
+        req.body
       )
 
     finch_req
-    |> Finch.request(finch_name)
+    |> Finch.request(finch_name, req_opts)
     |> case do
       {:ok, %Finch.Response{status: status, body: body, headers: headers}}
       when status in 200..299 ->
