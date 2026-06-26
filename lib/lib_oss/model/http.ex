@@ -6,8 +6,6 @@ defmodule LibOss.Model.Http do
     """
     alias LibOss.Typespecs
 
-    require Logger
-
     @type t :: %__MODULE__{
             scheme: String.t(),
             host: String.t(),
