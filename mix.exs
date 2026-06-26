@@ -36,8 +36,8 @@ defmodule LibOss.MixProject do
       {:mime, "~> 2.0"},
       {:jason, "~> 1.4"},
       {:sweet_xml, "~> 0.7.5"},
-      {:finch, "~> 0.20"},
-      {:ex_doc, "~> 0.39", only: :dev, runtime: false},
+      {:finch, "~> 0.23"},
+      {:ex_doc, "~> 0.40", only: :dev, runtime: false},
       {:styler, "~> 0.11", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
